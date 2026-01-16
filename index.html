@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <title>STAMCAR | Αγορά – Εύρεση – Πώληση Αυτοκινήτων</title>
+  <meta name="description" content="STAMCAR: Αγορά, εύρεση και πώληση αυτοκινήτων. Premium υπηρεσίες, live αναζήτηση και AI-like εκτίμηση αξίας οχήματος." />
+  <meta name="theme-color" content="#0E0E0E" />
+
+  <!-- OpenGraph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="STAMCAR | Αγορά – Εύρεση – Πώληση Αυτοκινήτων" />
+  <meta property="og:description" content="Premium automotive υπηρεσίες: εύρεση κατόπιν παραγγελίας, αγορά/πώληση, εκτίμηση αξίας." />
+  <meta property="og:image" content="assets/og.jpg" />
+  <meta property="og:locale" content="el_GR" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+  <!-- Premium fonts (Titles + Text) -->
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Rajdhani:wght@400;600;700&family=Inter:wght@300;400;500;600&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <a class="skip-link" href="#main">Μετάβαση στο περιεχόμενο</a>
+
+  <!-- Top chrome line (like business card) -->
+  <div class="top-accent" aria-hidden="true"></div>
+
+  <header class="site-header" id="top">
+    <nav class="nav">
+      <a class="brand" href="#top" aria-label="STAMCAR Home">
+        <span class="brand__wordmark">STAMCAR</span>
+        <span class="brand__tag">Automotive • Premium</span>
+      </a>
+
+      <button class="nav__toggle" id="navToggle" aria-label="Άνοιγμα μενού" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+
+      <div class="nav__links" id="navLinks">
+        <a href="#services">Τι Κάνουμε</a>
+        <a href="#search">Αναζήτηση</a>
+        <a href="#estimate">Κοστολόγηση</a>
+        <a href="#contact" class="nav__cta">Επικοινωνία</a>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main">
+    <!-- HERO -->
+    <section class="hero" aria-label="STAMCAR Hero">
+      <div class="hero__bg" aria-hidden="true"></div>
+
+      <div class="container hero__content reveal">
+        <div class="hero__left">
+          <p class="kicker">Premium / Sport / Luxury Automotive</p>
+          <h1 class="hero__title">
+            <span class="silver">STAMCAR</span>
+          </h1>
+          <p class="hero__subtitle">
+            Αγορά – Εύρεση – Πώληση Αυτοκινήτων
+          </p>
+
+          <div class="hero__actions">
+            <a class="btn btn--primary" href="#search">Αναζήτηση Αυτοκινήτου</a>
+            <a class="btn btn--ghost" href="#contact">Πούλησε το Αυτοκίνητό σου</a>
+          </div>
+
+          <div class="hero__chips" role="list">
+            <a class="chip" role="listitem" href="tel:+306988091918" aria-label="Κάλεσε στο 6988091918">
+              <span class="chip__icon" aria-hidden="true">☎</span>
+              <span>6988091918</span>
+            </a>
+            <a class="chip" role="listitem" href="mailto:info@stamcar.gr">
+              <span class="chip__icon" aria-hidden="true">✉</span>
+              <span>info@stamcar.gr</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="hero__right reveal">
+          <div class="hero-card">
+            <div class="hero-card__head">
+              <span class="dot dot--red" aria-hidden="true"></span>
+              <span class="dot" aria-hidden="true"></span>
+              <span class="dot" aria-hidden="true"></span>
+              <span class="hero-card__label">STAMCAR • Concierge</span>
+            </div>
+            <div class="hero-card__body">
+              <p class="hero-card__title">Βρες το σωστό αυτοκίνητο.</p>
+              <p class="hero-card__text">
+                Live αναζήτηση + εκτίμηση αξίας χωρίς backend. Έτοιμο για GitHub Pages.
+              </p>
+              <div class="hero-card__stats">
+                <div class="stat">
+                  <span class="stat__k">Response</span>
+                  <span class="stat__v">Fast</span>
+                </div>
+                <div class="stat">
+                  <span class="stat__k">Style</span>
+                  <span class="stat__v">Premium</span>
+                </div>
+                <div class="stat">
+                  <span class="stat__k">UX</span>
+                  <span class="stat__v">Smooth</span>
+                </div>
+              </div>
+            </div>
+            <div class="hero-card__foot">
+              <span class="badge">Carbon UI</span>
+              <span class="badge badge--red">Red Metallic Lines</span>
+              <span class="badge">Silver Headings</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero__line hero__line--top" aria-hidden="true"></div>
+      <div class="hero__line hero__line--bottom" aria-hidden="true"></div>
+    </section>
+
+    <!-- SERVICES -->
+    <section class="section" id="services">
+      <div class="container">
+        <header class="section__head reveal">
+          <h2 class="section__title"><span class="silver">Τι Κάνουμε</span></h2>
+          <p class="section__sub">Premium υπηρεσίες αγοράς/εύρεσης/πώλησης με έμφαση στη σωστή επιλογή.</p>
+        </header>
+
+        <div class="grid cards reveal">
+          <article class="card">
+            <div class="card__icon" aria-hidden="true">🏁</div>
+            <h3 class="card__title">Εύρεση κατόπιν παραγγελίας</h3>
+            <p class="card__text">Περιγράφεις ανάγκες & budget. Εμείς φιλτράρουμε την αγορά και φέρνουμε επιλογές.</p>
+          </article>
+
+          <article class="card">
+            <div class="card__icon" aria-hidden="true">💼</div>
+            <h3 class="card__title">Αγορά αυτοκινήτου</h3>
+            <p class="card__text">Υποστήριξη σε έλεγχο, διαπραγμάτευση και τελική επιλογή με premium εμπειρία.</p>
+          </article>
+
+          <article class="card">
+            <div class="card__icon" aria-hidden="true">🔄</div>
+            <h3 class="card__title">Πώληση αυτοκινήτου</h3>
+            <p class="card__text">Παρουσίαση, positioning και προώθηση ώστε να πιάσεις τη σωστή τιμή.</p>
+          </article>
+
+          <article class="card">
+            <div class="card__icon" aria-hidden="true">📈</div>
+            <h3 class="card__title">Εκτίμηση αξίας οχήματος</h3>
+            <p class="card__text">Rule-based “AI-like” κοστολόγηση με εύρος τιμής και confidence.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- SEARCH -->
+    <section class="section section--panel" id="search">
+      <div class="container">
+        <header class="section__head reveal">
+          <h2 class="section__title"><span class="silver">Αναζήτηση Αυτοκινήτου</span></h2>
+          <p class="section__sub">Live φίλτρα & αποτελέσματα σε premium κάρτες (dummy data μέσα στο JS).</p>
+        </header>
+
+        <div class="search">
+          <form class="filters reveal" id="searchForm" autocomplete="off">
+            <div class="filters__row">
+              <label class="field">
+                <span class="field__label">Μάρκα</span>
+                <select id="fBrand" class="field__control">
+                  <option value="">Όλες</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span class="field__label">Μοντέλο</span>
+                <select id="fModel" class="field__control" disabled>
+                  <option value="">Όλα</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span class="field__label">Χρονολογία (min)</span>
+                <input id="fYear" class="field__control" type="number" min="1990" max="2030" placeholder="π.χ. 2018" />
+              </label>
+
+              <label class="field">
+                <span class="field__label">Χιλιόμετρα (max)</span>
+                <input id="fKm" class="field__control" type="number" min="0" placeholder="π.χ. 90000" />
+              </label>
+            </div>
+
+            <div class="filters__row">
+              <label class="field">
+                <span class="field__label">Καύσιμο</span>
+                <select id="fFuel" class="field__control">
+                  <option value="">Όλα</option>
+                  <option>Βενζίνη</option>
+                  <option>Diesel</option>
+                  <option>Υβριδικό</option>
+                  <option>Ηλεκτρικό</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span class="field__label">Κιβώτιο</span>
+                <select id="fTrans" class="field__control">
+                  <option value="">Όλα</option>
+                  <option>Αυτόματο</option>
+                  <option>Χειροκίνητο</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span class="field__label">Ιπποδύναμη (min)</span>
+                <input id="fHp" class="field__control" type="number" min="0" placeholder="π.χ. 150" />
+              </label>
+
+              <label class="field">
+                <span class="field__label">Κατάσταση</span>
+                <select id="fCond" class="field__control">
+                  <option value="">Όλες</option>
+                  <option>Άριστη</option>
+                  <option>Πολύ καλή</option>
+                  <option>Καλή</option>
+                  <option>Μέτρια</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="filters__actions">
+              <button class="btn btn--ghost" type="button" id="clearFilters">Καθαρισμός</button>
+              <div class="filters__meta">
+                <span class="pill" id="resultCount">0 αποτελέσματα</span>
+                <span class="pill pill--muted">Live filtering</span>
+              </div>
+            </div>
+          </form>
+
+          <div class="results reveal">
+            <div class="results__grid" id="resultsGrid" aria-live="polite"></div>
+            <div class="results__empty" id="resultsEmpty" hidden>
+              <p class="results__emptyTitle">Δεν βρέθηκαν αποτελέσματα.</p>
+              <p class="results__emptyText">Δοκίμασε να χαλαρώσεις τα φίλτρα ή πάτα “Καθαρισμός”.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ESTIMATE -->
+    <section class="section" id="estimate">
+      <div class="container">
+        <header class="section__head reveal">
+          <h2 class="section__title"><span class="silver">AI-like Κοστολόγηση</span></h2>
+          <p class="section__sub">Rule-based estimator (χωρίς backend) με loading, reveal και confidence.</p>
+        </header>
+
+        <div class="estimate reveal">
+          <form class="panel" id="estimateForm">
+            <div class="panel__grid">
+              <label class="field">
+                <span class="field__label">Μάρκα</span>
+                <select id="eBrand" class="field__control" required>
+                  <option value="">Επίλεξε</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span class="field__label">Μοντέλο</span>
+                <select id="eModel" class="field__control" required disabled>
+                  <option value="">Επίλεξε</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span class="field__label">Έτος</span>
+                <input id="eYear" class="field__control" type="number" min="1990" max="2030" required placeholder="π.χ. 2020" />
+              </label>
+
+              <label class="field">
+                <span class="field__label">Χιλιόμετρα</span>
+                <input id="eKm" class="field__control" type="number" min="0" required placeholder="π.χ. 65000" />
+              </label>
+
+              <label class="field">
+                <span class="field__label">Καύσιμο</span>
+                <select id="eFuel" class="field__control" required>
+                  <option value="">Επίλεξε</option>
+                  <option>Βενζίνη</option>
+                  <option>Diesel</option>
+                  <option>Υβριδικό</option>
+                  <option>Ηλεκτρικό</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span class="field__label">Κατάσταση</span>
+                <select id="eCond" class="field__control" required>
+                  <option value="">Επίλεξε</option>
+                  <option>Άριστη</option>
+                  <option>Πολύ καλή</option>
+                  <option>Καλή</option>
+                  <option>Μέτρια</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="panel__actions">
+              <button class="btn btn--primary" type="submit">Εκτίμηση Αξίας</button>
+              <p class="hint">* Η εκτίμηση είναι ενδεικτική (demo). Για ακριβή αξιολόγηση επικοινώνησε με STAMCAR.</p>
+            </div>
+
+            <div class="ai" id="aiBox" hidden>
+              <div class="ai__top">
+                <span class="ai__chip">AI estimation</span>
+                <span class="ai__chip ai__chip--muted" id="aiStatus">Initializing…</span>
+              </div>
+              <div class="ai__bar" aria-hidden="true">
+                <span class="ai__barFill" id="aiBar"></span>
+              </div>
+              <div class="ai__log" id="aiLog" aria-live="polite"></div>
+            </div>
+          </form>
+
+          <aside class="panel panel--result" id="estimateResult" hidden aria-live="polite">
+            <h3 class="panel__title">Αποτέλεσμα</h3>
+            <div class="result">
+              <div class="result__row">
+                <span class="result__k">Εκτιμώμενη Αξία</span>
+                <span class="result__v" id="rValue">—</span>
+              </div>
+              <div class="result__row">
+                <span class="result__k">Εύρος Τιμής</span>
+                <span class="result__v" id="rRange">—</span>
+              </div>
+              <div class="result__row">
+                <span class="result__k">Confidence</span>
+                <span class="result__v" id="rConf">—</span>
+              </div>
+              <div class="result__disc">
+                <p class="disc__title">Disclaimer</p>
+                <p class="disc__text" id="rDisclaimer">
+                  Η εκτίμηση βασίζεται σε κανόνες (έτος/χιλιόμετρα/καύσιμο/κατάσταση) και δεν αντικαθιστά τεχνικό έλεγχο ή πραγματικές συνθήκες αγοράς.
+                </p>
+              </div>
+              <a class="btn btn--ghost" href="#contact">Ζήτα πραγματική αποτίμηση</a>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section class="section section--panel" id="contact">
+      <div class="container">
+        <header class="section__head reveal">
+          <h2 class="section__title"><span class="silver">Επικοινωνία</span></h2>
+          <p class="section__sub">Τα στοιχεία επικοινωνίας είναι ίδια με την επαγγελματική κάρτα.</p>
+        </header>
+
+        <div class="contact reveal">
+          <div class="panel">
+            <h3 class="panel__title">STAMCAR</h3>
+
+            <div class="contact__items">
+              <a class="contact__item" href="tel:+306988091918">
+                <span class="contact__icon" aria-hidden="true">☎</span>
+                <span class="contact__text">
+                  <span class="contact__k">Τηλέφωνο</span>
+                  <span class="contact__v">6988091918</span>
+                </span>
+              </a>
+
+              <a class="contact__item" href="mailto:info@stamcar.gr">
+                <span class="contact__icon" aria-hidden="true">✉</span>
+                <span class="contact__text">
+                  <span class="contact__k">Email</span>
+                  <span class="contact__v">info@stamcar.gr</span>
+                </span>
+              </a>
+            </div>
+
+            <div class="divider"></div>
+
+            <p class="muted">
+              Θες να πουλήσεις ή να βρούμε το σωστό αυτοκίνητο; Στείλε μήνυμα και θα επικοινωνήσουμε άμεσα.
+            </p>
+          </div>
+
+          <form class="panel" id="contactForm">
+            <h3 class="panel__title">Φόρμα Επικοινωνίας</h3>
+
+            <label class="field">
+              <span class="field__label">Ονοματεπώνυμο</span>
+              <input class="field__control" id="cName" type="text" required placeholder="π.χ. Γιώργος Παπαδόπουλος" />
+            </label>
+
+            <label class="field">
+              <span class="field__label">Email</span>
+              <input class="field__control" id="cEmail" type="email" required placeholder="π.χ. name@email.com" />
+            </label>
+
+            <label class="field">
+              <span class="field__label">Μήνυμα</span>
+              <textarea class="field__control field__control--area" id="cMsg" required placeholder="Γράψε τι χρειάζεσαι (εύρεση/πώληση/εκτίμηση)…"></textarea>
+            </label>
+
+            <div class="panel__actions">
+              <button class="btn btn--primary" type="submit">Αποστολή</button>
+              <p class="hint">
+                * Front-end μόνο. Θα ανοίξει το email σου (mailto) με συμπληρωμένο μήνυμα.
+              </p>
+            </div>
+
+            <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+          </form>
+        </div>
+
+        <footer class="footer">
+          <div class="footer__line" aria-hidden="true"></div>
+          <p class="footer__copy">© <span id="yearNow"></span> STAMCAR • Αγορά – Εύρεση – Πώληση Αυτοκινήτων</p>
+        </footer>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
