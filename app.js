@@ -1,474 +1,542 @@
-/* =========================================================
-   STAMCAR — Vanilla JS (GitHub Pages friendly)
-   - Dummy car data
-   - Live filtering
-   - AI-like rule-based estimator (no backend)
-   - Scroll reveal (IntersectionObserver)
-   - Mobile nav
-   - Contact form: mailto compose
-   ========================================================= */
+/* ═══════════════════════════════════════════════════════════
+   STAMCAR — Premium Automotive JavaScript
+   ═══════════════════════════════════════════════════════════ */
 
-"use strict";
+'use strict';
 
-/* -------------------------
-   Dummy car data (edit freely)
-   ------------------------- */
-const CARS = [
-  { id: 1, brand: "BMW", model: "320i", year: 2019, km: 78000, fuel: "Βενζίνη", trans: "Αυτόματο", hp: 184, condition: "Πολύ καλή", price: 26900, tag: "Sport Line" },
-  { id: 2, brand: "Mercedes-Benz", model: "A200", year: 2020, km: 52000, fuel: "Βενζίνη", trans: "Αυτόματο", hp: 163, condition: "Άριστη", price: 29900, tag: "AMG Pack" },
-  { id: 3, brand: "Audi", model: "A3", year: 2018, km: 99000, fuel: "Diesel", trans: "Αυτόματο", hp: 150, condition: "Καλή", price: 21900, tag: "S line" },
-  { id: 4, brand: "VW", model: "Golf", year: 2021, km: 41000, fuel: "Υβριδικό", trans: "Αυτόματο", hp: 204, condition: "Άριστη", price: 27900, tag: "eHybrid" },
-  { id: 5, brand: "Toyota", model: "Corolla", year: 2022, km: 26000, fuel: "Υβριδικό", trans: "Αυτόματο", hp: 184, condition: "Άριστη", price: 26800, tag: "Hybrid" },
-  { id: 6, brand: "Tesla", model: "Model 3", year: 2021, km: 68000, fuel: "Ηλεκτρικό", trans: "Αυτόματο", hp: 283, condition: "Πολύ καλή", price: 32900, tag: "Long Range" },
-  { id: 7, brand: "BMW", model: "X1", year: 2017, km: 118000, fuel: "Diesel", trans: "Αυτόματο", hp: 190, condition: "Καλή", price: 22900, tag: "xDrive" },
-  { id: 8, brand: "Audi", model: "Q3", year: 2019, km: 86000, fuel: "Βενζίνη", trans: "Αυτόματο", hp: 150, condition: "Πολύ καλή", price: 27900, tag: "Quattro look" },
-  { id: 9, brand: "Mercedes-Benz", model: "C200", year: 2016, km: 132000, fuel: "Diesel", trans: "Αυτόματο", hp: 136, condition: "Μέτρια", price: 17900, tag: "Executive" },
-  { id: 10, brand: "Peugeot", model: "3008", year: 2020, km: 70000, fuel: "Diesel", trans: "Αυτόματο", hp: 130, condition: "Πολύ καλή", price: 24500, tag: "GT Line" },
-  { id: 11, brand: "VW", model: "Tiguan", year: 2018, km: 104000, fuel: "Diesel", trans: "Χειροκίνητο", hp: 150, condition: "Καλή", price: 21900, tag: "Comfort" },
-  { id: 12, brand: "Toyota", model: "Yaris", year: 2019, km: 74000, fuel: "Υβριδικό", trans: "Αυτόματο", hp: 116, condition: "Πολύ καλή", price: 15900, tag: "City" }
+/* ── CAR DATA ────────────────────────────────────────────── */
+const CAR_DATA = [
+  { id:1, make:'BMW', model:'320d Sport Line', year:2021, km:68000, fuel:'Diesel', gearbox:'Αυτόματο', hp:190, condition:'Άριστη', price:32900, badge:'hot',
+    features:['LED φώτα','Navigation','Ηλιοροφή','Parking sensors','Δερμάτινο σαλόνι'] },
+  { id:2, make:'Mercedes-Benz', model:'C220 d AMG Line', year:2020, km:52000, fuel:'Diesel', gearbox:'Αυτόματο', hp:194, condition:'Άριστη', price:38500, badge:'hot',
+    features:['AMG πακέτο','Κάμερα 360°','Ambient lighting','Apple CarPlay','Keyless Go'] },
+  { id:3, make:'Audi', model:'A4 2.0 TDI S line', year:2022, km:31000, fuel:'Diesel', gearbox:'Αυτόματο', hp:150, condition:'Άριστη', price:41900, badge:'new',
+    features:['Virtual cockpit','MMI Navigation','Matrix LED','Quattro AWD','S line exterior'] },
+  { id:4, make:'Volkswagen', model:'Golf 8 GTI', year:2023, km:14000, fuel:'Βενζίνη', gearbox:'Αυτόματο', hp:245, condition:'Άριστη', price:36800, badge:'new',
+    features:['IQ.LIGHT','Dynaudio ηχοσύστημα','DCC ανάρτηση','Digital cockpit Pro','Wireless CarPlay'] },
+  { id:5, make:'Toyota', model:'Corolla 1.8 Hybrid', year:2022, km:44000, fuel:'Υβριδικό', gearbox:'Αυτόματο', hp:122, condition:'Άριστη', price:22900, badge:null,
+    features:['Toyota Safety Sense','Αυτόματο κλιματισμό','JBL ηχοσύστημα','Ηλεκτρικά καθίσματα'] },
+  { id:6, make:'BMW', model:'X3 xDrive20d M Sport', year:2020, km:78000, fuel:'Diesel', gearbox:'Αυτόματο', hp:190, condition:'Καλή', price:39500, badge:null,
+    features:['M Sport πακέτο','Panoramic roof','Harman Kardon','Adaptive cruise','Wireless charging'] },
+  { id:7, make:'Mercedes-Benz', model:'GLC 220d 4MATIC', year:2021, km:62000, fuel:'Diesel', gearbox:'Αυτόματο', hp:194, condition:'Άριστη', price:47900, badge:null,
+    features:['Burmester ηχοσύστημα','360° κάμερα','Airmatic ανάρτηση','Νυκτερινή όραση'] },
+  { id:8, make:'Hyundai', model:'Tucson 1.6 T-GDI Hybrid', year:2023, km:18000, fuel:'Υβριδικό', gearbox:'Αυτόματο', hp:230, condition:'Άριστη', price:34900, badge:'new',
+    features:['Panoramic roof','Bose ηχοσύστημα','HUD','Wireless CarPlay','SmartSense Safety'] },
+  { id:9, make:'Audi', model:'Q5 40 TDI quattro S line', year:2021, km:55000, fuel:'Diesel', gearbox:'Αυτόματο', hp:204, condition:'Καλή', price:44500, badge:null,
+    features:['Virtual cockpit plus','B&O ηχοσύστημα','Matrix LED','Quattro AWD','Ambient lighting'] },
+  { id:10, make:'Volkswagen', model:'Passat 2.0 TDI Business', year:2020, km:89000, fuel:'Diesel', gearbox:'Αυτόματο', hp:150, condition:'Καλή', price:21900, badge:null,
+    features:['Digital cockpit','Keyless','Κάμερα όπισθεν','Αισθητήρες παρκαρίσματος'] },
+  { id:11, make:'Kia', model:'EV6 AWD GT-Line', year:2023, km:22000, fuel:'Ηλεκτρικό', gearbox:'Αυτόματο', hp:325, condition:'Άριστη', price:49900, badge:'new',
+    features:['800V γρήγορη φόρτιση','HUD','Meridian ηχοσύστημα','Driver assistance+'] },
+  { id:12, make:'Ford', model:'Focus ST 2.3 EcoBoost', year:2021, km:41000, fuel:'Βενζίνη', gearbox:'Χειροκίνητο', hp:280, condition:'Καλή', price:28500, badge:null,
+    features:['ST περιβαλλοντική εκδοχή','Performance mode','B&O ηχοσύστημα','SYNC 4'] },
 ];
 
-/* -------------------------
-   Estimator base prices (demo)
-   - Key: "Brand|Model"
-   - Value: base price reference in EUR (good condition)
-   ------------------------- */
-const BASE_PRICE = {
-  "BMW|320i": 32000,
-  "BMW|X1": 30000,
-  "Mercedes-Benz|A200": 34000,
-  "Mercedes-Benz|C200": 33000,
-  "Audi|A3": 30000,
-  "Audi|Q3": 34000,
-  "VW|Golf": 29000,
-  "VW|Tiguan": 33000,
-  "Toyota|Corolla": 28000,
-  "Toyota|Yaris": 19000,
-  "Tesla|Model 3": 42000,
-  "Peugeot|3008": 32000
+/* ── BASE PRICES for AI Valuation ────────────────────────── */
+const BASE_PRICES = {
+  'BMW':          42000,
+  'Mercedes-Benz':46000,
+  'Audi':         40000,
+  'Volkswagen':   28000,
+  'Toyota':       26000,
+  'Ford':         24000,
+  'Hyundai':      22000,
+  'Kia':          21000,
+  'Nissan':       20000,
+  'Opel':         18000,
 };
+const FUEL_FACTORS = { petrol:1.0, diesel:1.05, hybrid:1.12, electric:1.2, lpg:0.85 };
+const CONDITION_FACTORS = { excellent:1.0, good:0.88, fair:0.74, poor:0.58 };
+const CONDITION_LABELS_GR = { excellent:'Άριστη', good:'Καλή', fair:'Μέτρια', poor:'Κακή' };
+const FUEL_LABELS_GR = { petrol:'Βενζίνη', diesel:'Diesel', hybrid:'Υβριδικό', electric:'Ηλεκτρικό', lpg:'LPG/CNG' };
 
-const $ = (sel) => document.querySelector(sel);
+/* ════════════════════════════════════════════════════════════
+   NAVBAR — scroll & hamburger
+   ════════════════════════════════════════════════════════════ */
+(function initNavbar() {
+  const navbar = document.getElementById('navbar');
+  const hamburger = document.getElementById('hamburger');
+  const navLinks = document.getElementById('navLinks');
 
-/* -------------------------
-   Helpers
-   ------------------------- */
-function formatEUR(n){
-  const rounded = Math.round(n);
-  return rounded.toLocaleString("el-GR") + " €";
-}
-function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
+  window.addEventListener('scroll', () => {
+    navbar.classList.toggle('scrolled', window.scrollY > 60);
+  }, { passive: true });
 
-function unique(arr){ return [...new Set(arr)].sort((a,b)=>a.localeCompare(b, "el")); }
-
-/* -------------------------
-   Scroll reveal
-   ------------------------- */
-function initReveal(){
-  const items = document.querySelectorAll(".reveal");
-  const io = new IntersectionObserver((entries)=>{
-    for(const e of entries){
-      if(e.isIntersecting){
-        e.target.classList.add("is-visible");
-        io.unobserve(e.target);
-      }
-    }
-  }, { threshold: 0.12 });
-  items.forEach(el => io.observe(el));
-}
-
-/* -------------------------
-   Mobile nav
-   ------------------------- */
-function initNav(){
-  const btn = $("#navToggle");
-  const links = $("#navLinks");
-  if(!btn || !links) return;
-
-  btn.addEventListener("click", ()=>{
-    const isOpen = links.classList.toggle("is-open");
-    btn.setAttribute("aria-expanded", String(isOpen));
+  hamburger.addEventListener('click', () => {
+    hamburger.classList.toggle('active');
+    navLinks.classList.toggle('open');
   });
 
-  // close on link click (mobile)
-  links.addEventListener("click", (e)=>{
-    const a = e.target.closest("a");
-    if(!a) return;
-    links.classList.remove("is-open");
-    btn.setAttribute("aria-expanded", "false");
+  // Close menu on link click
+  navLinks.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => {
+      hamburger.classList.remove('active');
+      navLinks.classList.remove('open');
+    });
   });
-}
+})();
 
-/* -------------------------
-   Search: populate filters + live filtering
-   ------------------------- */
-function initSearch(){
-  const fBrand = $("#fBrand");
-  const fModel = $("#fModel");
-  const fYear = $("#fYear");
-  const fKm = $("#fKm");
-  const fFuel = $("#fFuel");
-  const fTrans = $("#fTrans");
-  const fHp = $("#fHp");
-  const fCond = $("#fCond");
+/* ════════════════════════════════════════════════════════════
+   HERO COUNTER — animate numbers on load
+   ════════════════════════════════════════════════════════════ */
+(function initCounters() {
+  const counters = document.querySelectorAll('.stat-num');
+  let started = false;
 
-  const clearBtn = $("#clearFilters");
-  const grid = $("#resultsGrid");
-  const empty = $("#resultsEmpty");
-  const count = $("#resultCount");
-
-  if(!grid) return;
-
-  // Brands
-  const brands = unique(CARS.map(c => c.brand));
-  for(const b of brands){
-    const o = document.createElement("option");
-    o.value = b; o.textContent = b;
-    fBrand.appendChild(o);
+  function startCounters() {
+    if (started) return;
+    started = true;
+    counters.forEach(el => {
+      const target = parseInt(el.dataset.target, 10);
+      let current = 0;
+      const duration = 1800;
+      const step = target / (duration / 16);
+      const timer = setInterval(() => {
+        current = Math.min(current + step, target);
+        el.textContent = Math.round(current);
+        if (current >= target) clearInterval(timer);
+      }, 16);
+    });
   }
 
-  function refreshModels(){
-    const selectedBrand = fBrand.value;
-    fModel.innerHTML = `<option value="">Όλα</option>`;
+  // Start when hero is visible
+  const heroObs = new IntersectionObserver(([entry]) => {
+    if (entry.isIntersecting) startCounters();
+  }, { threshold: 0.5 });
 
-    if(!selectedBrand){
-      fModel.disabled = true;
+  const hero = document.getElementById('hero');
+  if (hero) heroObs.observe(hero);
+})();
+
+/* ════════════════════════════════════════════════════════════
+   SCROLL REVEAL
+   ════════════════════════════════════════════════════════════ */
+(function initReveal() {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.15 });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+})();
+
+/* ════════════════════════════════════════════════════════════
+   CAR SEARCH & FILTER
+   ════════════════════════════════════════════════════════════ */
+(function initSearch() {
+  let currentData = [...CAR_DATA];
+
+  function renderCars(data) {
+    const grid = document.getElementById('carsGrid');
+    const noResults = document.getElementById('noResults');
+    const countEl = document.getElementById('resultsCount');
+
+    countEl.textContent = data.length;
+    grid.innerHTML = '';
+
+    if (data.length === 0) {
+      noResults.classList.remove('hidden');
       return;
     }
-    const models = unique(CARS.filter(c=>c.brand===selectedBrand).map(c=>c.model));
-    for(const m of models){
-      const o = document.createElement("option");
-      o.value = m; o.textContent = m;
-      fModel.appendChild(o);
-    }
-    fModel.disabled = false;
+    noResults.classList.add('hidden');
+
+    data.forEach((car, idx) => {
+      const card = document.createElement('div');
+      card.className = 'car-card';
+      card.style.animationDelay = `${idx * 0.06}s`;
+      card.innerHTML = `
+        <div class="car-img-placeholder">
+          <svg viewBox="0 0 64 32" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="4" y="12" width="56" height="14" rx="3"/>
+            <path d="M16 12 L22 4 L42 4 L48 12"/>
+            <circle cx="18" cy="26" r="5"/><circle cx="46" cy="26" r="5"/>
+            <circle cx="18" cy="26" r="2.5" fill="currentColor"/>
+            <circle cx="46" cy="26" r="2.5" fill="currentColor"/>
+          </svg>
+          ${car.badge ? `<span class="car-badge badge-${car.badge}">${car.badge === 'new' ? 'ΝΕΟ' : 'HOT'}</span>` : ''}
+        </div>
+        <div class="car-info">
+          <p class="car-make">${car.make}</p>
+          <p class="car-name">${car.model}</p>
+          <div class="car-specs">
+            <span class="car-spec">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              ${car.year}
+            </span>
+            <span class="car-spec">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              ${car.km.toLocaleString('el-GR')} km
+            </span>
+            <span class="car-spec">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 22h18M3 6h18M6 6V3M18 6V3M6 22v-3M18 22v-3M3 14h18"/></svg>
+              ${car.fuel}
+            </span>
+            <span class="car-spec">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+              ${car.hp} hp
+            </span>
+            <span class="car-spec">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 8v4l3 3"/></svg>
+              ${car.gearbox}
+            </span>
+            <span class="car-spec">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              ${car.condition}
+            </span>
+          </div>
+          <div class="car-price-row">
+            <p class="car-price">${car.price.toLocaleString('el-GR')} €</p>
+            <button class="car-details-btn" data-id="${car.id}">Λεπτομέρειες</button>
+          </div>
+        </div>
+      `;
+      card.querySelector('.car-details-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        openModal(car);
+      });
+      card.addEventListener('click', () => openModal(car));
+      grid.appendChild(card);
+    });
   }
 
-  function getFilters(){
-    return {
-      brand: fBrand.value.trim(),
-      model: fModel.value.trim(),
-      yearMin: Number(fYear.value) || null,
-      kmMax: Number(fKm.value) || null,
-      fuel: fFuel.value.trim(),
-      trans: fTrans.value.trim(),
-      hpMin: Number(fHp.value) || null,
-      cond: fCond.value.trim()
-    };
-  }
+  function applyFilters() {
+    const make     = document.getElementById('filterMake').value;
+    const model    = document.getElementById('filterModel').value.toLowerCase().trim();
+    const yearFrom = parseInt(document.getElementById('filterYearFrom').value) || 0;
+    const fuel     = document.getElementById('filterFuel').value;
+    const gearbox  = document.getElementById('filterGearbox').value;
+    const maxKm    = parseInt(document.getElementById('filterKm').value) || Infinity;
 
-  function applyFilters(){
-    const f = getFilters();
-
-    let results = CARS.filter(c=>{
-      if(f.brand && c.brand !== f.brand) return false;
-      if(f.model && c.model !== f.model) return false;
-      if(f.yearMin && c.year < f.yearMin) return false;
-      if(f.kmMax && c.km > f.kmMax) return false;
-      if(f.fuel && c.fuel !== f.fuel) return false;
-      if(f.trans && c.trans !== f.trans) return false;
-      if(f.hpMin && c.hp < f.hpMin) return false;
-      if(f.cond && c.condition !== f.cond) return false;
+    currentData = CAR_DATA.filter(car => {
+      if (make && car.make !== make) return false;
+      if (model && !car.model.toLowerCase().includes(model)) return false;
+      if (yearFrom && car.year < yearFrom) return false;
+      if (fuel && car.fuel !== fuel) return false;
+      if (gearbox && car.gearbox !== gearbox) return false;
+      if (car.km > maxKm) return false;
       return true;
     });
 
-    // Premium-ish ordering: newest first, then lowest km
-    results.sort((a,b)=> (b.year - a.year) || (a.km - b.km));
-
-    renderResults(results);
+    renderCars(currentData);
   }
 
-  function renderResults(results){
-    grid.innerHTML = "";
-    count.textContent = `${results.length} αποτελέσματα`;
-    empty.hidden = results.length !== 0;
+  function resetFilters() {
+    ['filterMake','filterYearFrom','filterFuel','filterGearbox','filterKm'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    document.getElementById('filterModel').value = '';
+    currentData = [...CAR_DATA];
+    renderCars(currentData);
+  }
 
-    for(const c of results){
-      const el = document.createElement("article");
-      el.className = "car";
-      el.innerHTML = `
-        <div class="car__top">
-          <div>
-            <h4 class="car__title">${escapeHTML(c.brand)} ${escapeHTML(c.model)}</h4>
-            <p class="car__sub">${c.year} • ${c.km.toLocaleString("el-GR")} km • ${escapeHTML(c.fuel)} • ${escapeHTML(c.trans)}</p>
-          </div>
-          <span class="car__badge">${formatEUR(c.price)}</span>
+  document.getElementById('applyFilters').addEventListener('click', applyFilters);
+  document.getElementById('resetFilters').addEventListener('click', resetFilters);
+  document.getElementById('resetFilters2').addEventListener('click', resetFilters);
+
+  // Live search on model input
+  document.getElementById('filterModel').addEventListener('input', applyFilters);
+
+  // Initial render
+  renderCars(CAR_DATA);
+})();
+
+/* ════════════════════════════════════════════════════════════
+   CAR MODAL
+   ════════════════════════════════════════════════════════════ */
+function openModal(car) {
+  const modal = document.getElementById('carModal');
+  const content = document.getElementById('modalContent');
+
+  content.innerHTML = `
+    <div style="margin-bottom:1.5rem;">
+      <p style="font-family:var(--font-display);font-size:.65rem;letter-spacing:.2em;color:var(--red);text-transform:uppercase;margin-bottom:.4rem;">${car.make}</p>
+      <h2 style="font-size:1.6rem;color:#fff;margin-bottom:.5rem;">${car.model}</h2>
+      <p style="font-family:var(--font-display);font-size:2rem;font-weight:900;background:linear-gradient(135deg,#fff,#c8c8c8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">${car.price.toLocaleString('el-GR')} €</p>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.5rem;">
+      ${[
+        ['Χρονολογία', car.year],
+        ['Χιλιόμετρα', car.km.toLocaleString('el-GR') + ' km'],
+        ['Καύσιμο', car.fuel],
+        ['Κιβώτιο', car.gearbox],
+        ['Ιπποδύναμη', car.hp + ' hp'],
+        ['Κατάσταση', car.condition],
+      ].map(([label, val]) => `
+        <div style="background:var(--bg-card2);border:1px solid var(--border-sub);border-radius:8px;padding:.75rem 1rem;">
+          <p style="font-family:var(--font-display);font-size:.6rem;letter-spacing:.15em;color:var(--text-dim);text-transform:uppercase;margin-bottom:.2rem;">${label}</p>
+          <p style="font-weight:600;color:#fff;">${val}</p>
         </div>
+      `).join('')}
+    </div>
+    <div style="margin-bottom:1.5rem;">
+      <p style="font-family:var(--font-display);font-size:.65rem;letter-spacing:.2em;color:var(--text-dim);text-transform:uppercase;margin-bottom:.75rem;">Εξοπλισμός</p>
+      <ul style="list-style:none;display:flex;flex-direction:column;gap:.4rem;">
+        ${car.features.map(f => `
+          <li style="display:flex;align-items:center;gap:.5rem;font-size:.875rem;color:var(--text);">
+            <span style="color:var(--red);font-weight:700;">→</span> ${f}
+          </li>
+        `).join('')}
+      </ul>
+    </div>
+    <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+      <a href="tel:6988091918" class="btn btn-primary" style="flex:1;justify-content:center;">
+        📞 6988091918
+      </a>
+      <a href="#contact" class="btn btn-outline" style="flex:1;justify-content:center;" onclick="document.getElementById('carModal').classList.add('hidden')">
+        Αποστολή Μηνύματος
+      </a>
+    </div>
+  `;
 
-        <div class="car__specs">
-          <div class="spec"><span class="spec__k">Ιπποδύναμη</span><span class="spec__v">${c.hp} hp</span></div>
-          <div class="spec"><span class="spec__k">Κατάσταση</span><span class="spec__v">${escapeHTML(c.condition)}</span></div>
-          <div class="spec"><span class="spec__k">Tag</span><span class="spec__v">${escapeHTML(c.tag)}</span></div>
-          <div class="spec"><span class="spec__k">ID</span><span class="spec__v">#${c.id}</span></div>
-        </div>
-      `;
-      grid.appendChild(el);
-    }
-  }
-
-  function escapeHTML(str){
-    return String(str)
-      .replaceAll("&","&amp;")
-      .replaceAll("<","&lt;")
-      .replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;")
-      .replaceAll("'","&#039;");
-  }
-
-  // Events
-  fBrand.addEventListener("change", ()=>{
-    refreshModels();
-    applyFilters();
-  });
-
-  [fModel, fYear, fKm, fFuel, fTrans, fHp, fCond].forEach(el=>{
-    el.addEventListener("input", applyFilters);
-    el.addEventListener("change", applyFilters);
-  });
-
-  clearBtn.addEventListener("click", ()=>{
-    $("#searchForm").reset();
-    fModel.innerHTML = `<option value="">Όλα</option>`;
-    fModel.disabled = true;
-    applyFilters();
-  });
-
-  refreshModels();
-  applyFilters();
+  modal.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
 }
 
-/* -------------------------
-   Estimator (AI-like)
-   ------------------------- */
-function initEstimator(){
-  const eBrand = $("#eBrand");
-  const eModel = $("#eModel");
-  const eYear = $("#eYear");
-  const eKm = $("#eKm");
-  const eFuel = $("#eFuel");
-  const eCond = $("#eCond");
+(function initModal() {
+  const modal = document.getElementById('carModal');
+  const closeBtn = document.getElementById('modalClose');
 
-  const form = $("#estimateForm");
-  const aiBox = $("#aiBox");
-  const aiBar = $("#aiBar");
-  const aiLog = $("#aiLog");
-  const aiStatus = $("#aiStatus");
-
-  const out = $("#estimateResult");
-  const rValue = $("#rValue");
-  const rRange = $("#rRange");
-  const rConf = $("#rConf");
-
-  if(!form || !eBrand || !eModel) return;
-
-  // populate from dataset
-  const brands = unique(CARS.map(c=>c.brand));
-  for(const b of brands){
-    const o = document.createElement("option");
-    o.value = b; o.textContent = b;
-    eBrand.appendChild(o);
+  function closeModal() {
+    modal.classList.add('hidden');
+    document.body.style.overflow = '';
   }
 
-  function refreshEstimatorModels(){
-    const b = eBrand.value;
-    eModel.innerHTML = `<option value="">Επίλεξε</option>`;
-    if(!b){ eModel.disabled = true; return; }
-    const models = unique(CARS.filter(c=>c.brand===b).map(c=>c.model));
-    for(const m of models){
-      const o = document.createElement("option");
-      o.value = m; o.textContent = m;
-      eModel.appendChild(o);
+  closeBtn.addEventListener('click', closeModal);
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeModal();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeModal();
+  });
+})();
+
+/* ════════════════════════════════════════════════════════════
+   AI VALUATION ENGINE
+   ════════════════════════════════════════════════════════════ */
+(function initValuation() {
+  // Populate year select
+  const yearSelect = document.getElementById('valYear');
+  const currentYear = new Date().getFullYear();
+  for (let y = currentYear; y >= 2000; y--) {
+    const opt = document.createElement('option');
+    opt.value = y;
+    opt.textContent = y;
+    yearSelect.appendChild(opt);
+  }
+
+  document.getElementById('estimateBtn').addEventListener('click', runEstimation);
+
+  function runEstimation() {
+    const make      = document.getElementById('valMake').value;
+    const model     = document.getElementById('valModel').value.trim();
+    const year      = parseInt(document.getElementById('valYear').value);
+    const km        = parseInt(document.getElementById('valKm').value);
+    const fuel      = document.getElementById('valFuel').value;
+    const condition = document.getElementById('valCondition').value;
+
+    // Validation
+    if (!make || !model || !year || isNaN(km) || !fuel || !condition) {
+      alert('⚠️ Παρακαλώ συμπληρώστε όλα τα υποχρεωτικά πεδία.');
+      return;
     }
-    eModel.disabled = false;
-  }
-
-  eBrand.addEventListener("change", refreshEstimatorModels);
-
-  form.addEventListener("submit", async (ev)=>{
-    ev.preventDefault();
-    out.hidden = true;
-
-    const brand = eBrand.value.trim();
-    const model = eModel.value.trim();
-    const year = Number(eYear.value);
-    const km = Number(eKm.value);
-    const fuel = eFuel.value.trim();
-    const cond = eCond.value.trim();
-
-    const key = `${brand}|${model}`;
-    const base = BASE_PRICE[key] ?? guessBaseFromBrand(brand);
-
-    // AI-like loading UX
-    aiBox.hidden = false;
-    aiLog.textContent = "";
-    aiBar.style.width = "0%";
-    aiStatus.textContent = "Initializing…";
-
-    const steps = [
-      "Scanning market segments…",
-      "Applying depreciation curve…",
-      "Normalizing mileage penalty…",
-      "Adjusting fuel factor…",
-      "Calibrating condition multiplier…",
-      "Finalizing estimate…"
-    ];
-
-    for(let i=0;i<steps.length;i++){
-      aiStatus.textContent = steps[i];
-      aiLog.textContent += `> ${steps[i]}\n`;
-      aiBar.style.width = `${Math.round(((i+1)/steps.length)*100)}%`;
-      // small delay for “AI feel”
-      await sleep(340 + i*90);
+    if (km < 0 || km > 999999) {
+      alert('⚠️ Παρακαλώ εισάγετε έγκυρα χιλιόμετρα (0 - 999.999).');
+      return;
     }
 
-    const result = estimatePrice({ base, year, km, fuel, cond });
-    const conf = confidenceScore({ brand, model, year, km, fuel, cond, hasExactBase: (BASE_PRICE[key] != null) });
+    // Show loading, hide form and result
+    document.getElementById('valResult').classList.add('hidden');
+    document.getElementById('valLoading').classList.remove('hidden');
 
-    rValue.textContent = formatEUR(result.value);
-    rRange.textContent = `${formatEUR(result.min)} – ${formatEUR(result.max)}`;
-    rConf.textContent = `${conf}%`;
+    // Animate loading steps
+    const steps = ['step1','step2','step3','step4'];
+    steps.forEach((id, i) => {
+      document.getElementById(id).classList.remove('active');
+      setTimeout(() => {
+        document.getElementById(id).classList.add('active');
+      }, i * 500 + 100);
+    });
 
-    // Smooth reveal
-    await sleep(180);
-    out.hidden = false;
-    out.scrollIntoView({ behavior:"smooth", block:"nearest" });
-
-    aiStatus.textContent = "Done.";
-  });
-
-  refreshEstimatorModels();
-}
-
-function sleep(ms){ return new Promise(r=>setTimeout(r, ms)); }
-
-function guessBaseFromBrand(brand){
-  // fallback if brand/model not in base table
-  const brandAvg = {
-    "BMW": 31000,
-    "Mercedes-Benz": 33000,
-    "Audi": 31500,
-    "VW": 28000,
-    "Toyota": 24000,
-    "Tesla": 41000,
-    "Peugeot": 26000
-  };
-  return brandAvg[brand] ?? 26000;
-}
-
-function estimatePrice({ base, year, km, fuel, cond }){
-  const now = new Date().getFullYear();
-  const age = clamp(now - year, 0, 35);
-
-  // Depreciation (simple curve): 11% first year, then 7% per year
-  const depFirst = 0.11;
-  const depNext = 0.07;
-
-  let price = base;
-  if(age >= 1){
-    price *= (1 - depFirst);
-    for(let i=2; i<=age; i++) price *= (1 - depNext);
+    // Simulate AI processing
+    setTimeout(() => {
+      const result = calculateValue({ make, model, year, km, fuel, condition });
+      displayResult(result, { make, model, year, km, fuel, condition });
+    }, 2400);
   }
 
-  // Mileage penalty: baseline 15k/year, penalize above
-  const expectedKm = age * 15000;
-  const over = Math.max(0, km - expectedKm);
-  // every extra 10k => -2.2%
-  const kmPenalty = (over / 10000) * 0.022;
-  price *= (1 - clamp(kmPenalty, 0, 0.35));
+  function calculateValue({ make, model, year, km, fuel, condition }) {
+    // Base price from brand
+    const base = BASE_PRICES[make] || 22000;
 
-  // Fuel factor
-  const fuelFactor = {
-    "Βενζίνη": 1.00,
-    "Diesel": 0.98,
-    "Υβριδικό": 1.05,
-    "Ηλεκτρικό": 1.04
-  }[fuel] ?? 1.00;
-  price *= fuelFactor;
+    // Age depreciation: 12% first year, 8% subsequent years
+    const age = new Date().getFullYear() - year;
+    let depreciated = base;
+    if (age > 0) {
+      depreciated = base * 0.88; // first year
+      for (let i = 1; i < age; i++) {
+        depreciated *= 0.92; // each additional year
+      }
+    }
 
-  // Condition factor
-  const condFactor = {
-    "Άριστη": 1.06,
-    "Πολύ καλή": 1.02,
-    "Καλή": 0.96,
-    "Μέτρια": 0.88
-  }[cond] ?? 1.00;
-  price *= condFactor;
+    // Km penalty
+    const avgKmPerYear = 20000;
+    const expectedKm = age * avgKmPerYear;
+    const excessKm = Math.max(0, km - expectedKm);
+    const kmPenaltyRate = 0.04 / 10000; // 4% per 10k excess km
+    const kmFactor = 1 - (excessKm * kmPenaltyRate);
 
-  // Guard rails
-  price = clamp(price, 1200, 250000);
+    // Fuel factor
+    const fuelMult = FUEL_FACTORS[fuel] || 1;
 
-  // Range: +/- based on age & condition uncertainty
-  const rangePct = clamp(0.05 + age*0.005 + (cond === "Μέτρια" ? 0.04 : 0), 0.06, 0.18);
-  const min = price * (1 - rangePct);
-  const max = price * (1 + rangePct);
+    // Condition factor
+    const condMult = CONDITION_FACTORS[condition] || 0.85;
 
-  return {
-    value: price,
-    min,
-    max
-  };
-}
+    // Final calculation
+    let price = depreciated * Math.max(0.5, kmFactor) * fuelMult * condMult;
 
-function confidenceScore({ year, km, fuel, cond, hasExactBase }){
-  let score = 78;
-  if(hasExactBase) score += 10;
-  if(Number.isFinite(year) && year >= 2005) score += 4;
-  if(Number.isFinite(km) && km >= 0) score += 4;
-  if(fuel) score += 2;
-  if(cond) score += 2;
+    // Round to nearest 100
+    price = Math.round(price / 100) * 100;
 
-  // older cars => lower confidence (market variance)
-  const age = new Date().getFullYear() - year;
-  score -= clamp(age * 0.8, 0, 14);
+    // Confidence based on how much data we have
+    let confidence = 82;
+    if (Object.keys(BASE_PRICES).includes(make)) confidence += 8;
+    if (age <= 5) confidence += 5;
+    if (km < 100000) confidence += 3;
+    confidence = Math.min(96, confidence);
 
-  return clamp(Math.round(score), 55, 96);
-}
+    return { price, confidence, kmFactor, condMult, fuelMult, age, excessKm };
+  }
 
-/* -------------------------
-   Contact form (mailto)
-   ------------------------- */
-function initContact(){
-  const form = $("#contactForm");
-  const toast = $("#toast");
-  if(!form) return;
+  function displayResult(result, params) {
+    document.getElementById('valLoading').classList.add('hidden');
+    const resultEl = document.getElementById('valResult');
+    resultEl.classList.remove('hidden');
 
-  form.addEventListener("submit", (e)=>{
+    // Vehicle name
+    document.getElementById('resultVehicleName').textContent =
+      `${params.make} ${params.model} (${params.year})`;
+
+    // Price
+    const { price, confidence } = result;
+    document.getElementById('resultPrice').textContent =
+      price.toLocaleString('el-GR') + ' €';
+
+    const low  = Math.round((price * 0.92) / 100) * 100;
+    const high = Math.round((price * 1.08) / 100) * 100;
+    document.getElementById('resultRange').textContent =
+      `Εύρος: ${low.toLocaleString('el-GR')} € – ${high.toLocaleString('el-GR')} €`;
+
+    // Confidence bar
+    document.getElementById('confidenceVal').textContent = confidence + '%';
+    setTimeout(() => {
+      document.getElementById('confidenceBar').style.width = confidence + '%';
+    }, 100);
+
+    // Factors
+    const kmImpact  = Math.round((1 - Math.max(0.5, result.kmFactor)) * 100);
+    const condLabel = CONDITION_LABELS_GR[params.condition];
+    const fuelLabel = FUEL_LABELS_GR[params.fuel];
+
+    document.getElementById('resultFactors').innerHTML = `
+      <div class="factor-item">
+        <p class="factor-label">Ηλικία Οχήματος</p>
+        <p class="factor-value ${result.age > 8 ? 'negative' : ''}">${result.age} έτη</p>
+      </div>
+      <div class="factor-item">
+        <p class="factor-label">Επίδραση Km</p>
+        <p class="factor-value ${kmImpact > 10 ? 'negative' : ''}">${kmImpact > 0 ? '-' + kmImpact + '%' : 'Κανονική χρήση'}</p>
+      </div>
+      <div class="factor-item">
+        <p class="factor-label">Τύπος Καυσίμου</p>
+        <p class="factor-value ${result.fuelMult >= 1.1 ? 'positive' : ''}">${fuelLabel} ${result.fuelMult > 1 ? '(+' + Math.round((result.fuelMult-1)*100) + '%)' : result.fuelMult < 1 ? '(' + Math.round((result.fuelMult-1)*100) + '%)' : ''}</p>
+      </div>
+      <div class="factor-item">
+        <p class="factor-label">Κατάσταση</p>
+        <p class="factor-value ${result.condMult < 0.8 ? 'negative' : result.condMult === 1 ? 'positive' : ''}">${condLabel}</p>
+      </div>
+    `;
+  }
+})();
+
+/* ════════════════════════════════════════════════════════════
+   CONTACT FORM
+   ════════════════════════════════════════════════════════════ */
+(function initContact() {
+  const form = document.getElementById('contactForm');
+
+  form.addEventListener('submit', (e) => {
     e.preventDefault();
-    const name = $("#cName").value.trim();
-    const email = $("#cEmail").value.trim();
-    const msg = $("#cMsg").value.trim();
 
-    const subject = encodeURIComponent("STAMCAR • Νέο μήνυμα από site");
-    const body = encodeURIComponent(
-      `Ονοματεπώνυμο: ${name}\nEmail: ${email}\n\nΜήνυμα:\n${msg}\n\n—\nΣτάλθηκε από το website της STAMCAR`
-    );
+    const name  = document.getElementById('cName').value.trim();
+    const email = document.getElementById('cEmail').value.trim();
+    const msg   = document.getElementById('cMsg').value.trim();
 
-    // show toast
-    toast.hidden = false;
-    toast.textContent = "Άνοιγμα email εφαρμογής…";
-    setTimeout(()=>{ toast.hidden = true; }, 1800);
+    if (!name || !email || !msg) return;
 
-    window.location.href = `mailto:info@stamcar.gr?subject=${subject}&body=${body}`;
-    form.reset();
+    const btn = form.querySelector('[type=submit]');
+    btn.textContent = 'Αποστολή...';
+    btn.disabled = true;
+
+    // Simulate form submission
+    setTimeout(() => {
+      form.reset();
+      btn.textContent = '✓ Εστάλη';
+      document.getElementById('formSuccess').classList.remove('hidden');
+      setTimeout(() => {
+        btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Αποστολή Μηνύματος`;
+        btn.disabled = false;
+      }, 3000);
+    }, 1500);
   });
-}
+})();
 
-/* -------------------------
-   Footer year
-   ------------------------- */
-function initYear(){
-  const y = $("#yearNow");
-  if(y) y.textContent = String(new Date().getFullYear());
-}
+/* ════════════════════════════════════════════════════════════
+   SMOOTH ACTIVE NAV LINKS
+   ════════════════════════════════════════════════════════════ */
+(function initActiveSections() {
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.nav-links a');
 
-/* -------------------------
-   Boot
-   ------------------------- */
-document.addEventListener("DOMContentLoaded", ()=>{
-  initNav();
-  initReveal();
-  initSearch();
-  initEstimator();
-  initContact();
-  initYear();
-});
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(link => {
+          link.classList.toggle('active-link',
+            link.getAttribute('href') === '#' + entry.target.id);
+        });
+      }
+    });
+  }, { threshold: 0.4 });
+
+  sections.forEach(s => observer.observe(s));
+})();
+
+/* ════════════════════════════════════════════════════════════
+   CURSOR GLOW (desktop)
+   ════════════════════════════════════════════════════════════ */
+(function initCursorGlow() {
+  if (window.matchMedia('(pointer: coarse)').matches) return; // skip mobile
+
+  const glow = document.createElement('div');
+  glow.style.cssText = `
+    position:fixed;pointer-events:none;z-index:9999;
+    width:400px;height:400px;border-radius:50%;
+    background:radial-gradient(circle, rgba(177,18,26,0.04) 0%, transparent 70%);
+    transform:translate(-50%,-50%);
+    transition:left .15s ease, top .15s ease;
+    will-change:left,top;
+  `;
+  document.body.appendChild(glow);
+
+  document.addEventListener('mousemove', e => {
+    glow.style.left = e.clientX + 'px';
+    glow.style.top  = e.clientY + 'px';
+  }, { passive: true });
+})();
+
+console.log('%cSTAMCAR — Premium Automotive', 'color:#B1121A;font-family:Orbitron,sans-serif;font-size:18px;font-weight:900;letter-spacing:4px;');
+console.log('%cΑγορά – Εύρεση – Πώληση Αυτοκινήτων', 'color:#888;font-family:Montserrat,sans-serif;font-size:12px;');
