@@ -69,35 +69,37 @@ async function loadCars() {
   try {
     const res  = await fetch(SHEET_URL);
     const text = await res.text();
-    const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
+    // Strip the JSONP wrapper
+    const jsonStr = text.replace(/^[^(]+\(/, '').replace(/\);?\s*$/, '');
+    const json = JSON.parse(jsonStr);
     const rows = json.table.rows;
-    const cols = json.table.cols.map(c => c.label.toLowerCase().trim());
+    // Normalize column names: lowercase + trim all whitespace
+    const cols = json.table.cols.map(c => c.label.toLowerCase().replace(/\s+/g, ''));
 
     ALL_CARS = rows
       .map(row => {
         const car = {};
         cols.forEach((col, i) => {
           const cell = row.c[i];
-          car[col] = cell ? (cell.v !== null && cell.v !== undefined ? cell.v : '') : '';
+          car[col] = cell ? (cell.v !== null && cell.v !== undefined ? String(cell.v).trim() : '') : '';
         });
+        // Support both "photo" and "photos" column names
+        car.photo = (car.photo || car.photos || '').trim();
         // Features: comma or pipe separated → array
-        if (car.features && typeof car.features === 'string') {
-          car.features = car.features.split(/[,|]/).map(f => f.trim()).filter(Boolean);
-        } else {
-          car.features = [];
-        }
+        const featStr = car.features || car.feature || '';
+        car.features = featStr ? featStr.split(/[,|]/).map(f => f.trim()).filter(Boolean) : [];
         // Numbers
         car.year  = parseInt(car.year)  || 0;
         car.km    = parseInt(car.km)    || 0;
         car.hp    = parseInt(car.hp)    || 0;
         car.price = parseInt(car.price) || 0;
         // Badge: lowercase trim
-        car.badge = (car.badge || '').toString().toLowerCase().trim();
-        // Photo: column "photo" in sheet — Google Drive share link or imgur
-        car.photo = (car.photo || '').toString().trim();
+        car.badge = (car.badge || '').toLowerCase().trim();
         return car;
       })
       .filter(car => car.make && car.model && car.price > 0);
+    
+    console.log('✅ Loaded', ALL_CARS.length, 'cars from Google Sheets');
 
     renderCars(ALL_CARS);
   } catch (err) {
