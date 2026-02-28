@@ -1,27 +1,50 @@
 /* ═══════════════════════════════════════════════════════════
-   STAMCAR — app.js
-   Data source: Google Sheets (public)
+   STAMCAR — app.js v3
+   Google Sheets data source
+   Features: photos, custom badges, all makes, Formspree
    ═══════════════════════════════════════════════════════════ */
 
 'use strict';
 
 /* ── GOOGLE SHEETS CONFIG ────────────────────────────────── */
-// Για να προσθέσεις/αφαιρέσεις αμάξι: άνοιξε το Google Sheet και άλλαξε γραμμές
 const SHEET_ID  = '1SGtbhM-LnqbeR4t3P_iV2cA8ip8gvroM9lbUF5ZhXTg';
 const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=Φύλλο1`;
 
-/* ── AI Valuation ────────────────────────────────────────── */
+/* ── FORMSPREE ───────────────────────────────────────────── */
+const FORMSPREE_EMAIL = 'Stamcarinfo@gmail.com';
+// Για να δουλεύει το form: πήγαινε στο formspree.io, δημιούργησε δωρεάν λογαριασμό
+// και αντικατάστησε το παρακάτω με το form ID σου (π.χ. "xpwzgkqb")
+const FORMSPREE_ID = ''; // ← βάλε εδώ το ID σου από formspree.io
+
+/* ── BADGE COLORS ────────────────────────────────────────── */
+// Προσθέτουμε αυτόματα χρώμα για κάθε badge που γράφεις στο Sheet
+const BADGE_STYLES = {
+  'hot':    { bg: 'rgba(177,18,26,0.85)',   color: '#fff', label: 'HOT' },
+  'new':    { bg: 'rgba(34,197,94,0.85)',   color: '#fff', label: 'ΝΕΟ' },
+  'cheap':  { bg: 'rgba(251,191,36,0.85)',  color: '#000', label: 'ΦΘΗΝΟ' },
+  'sale':   { bg: 'rgba(249,115,22,0.85)',  color: '#fff', label: 'SALE' },
+  'top':    { bg: 'rgba(139,92,246,0.85)',  color: '#fff', label: 'TOP' },
+  'offer':  { bg: 'rgba(20,184,166,0.85)',  color: '#fff', label: 'ΠΡΟΣΦΟΡΑ' },
+};
+
+/* ── AI Valuation — ALL makes ────────────────────────────── */
 const BASE_PRICES = {
-  'BMW':46000,'Mercedes-Benz':50000,'Audi':44000,'Volkswagen':30000,
-  'Toyota':28000,'Ford':26000,'Hyundai':24000,'Kia':23000,
-  'Nissan':22000,'Opel':20000
+  'Alfa Romeo':48000, 'Audi':44000, 'BMW':46000, 'Chevrolet':28000,
+  'Chrysler':30000, 'Citroen':22000, 'Dacia':16000, 'Fiat':20000,
+  'Ford':26000, 'Honda':24000, 'Hyundai':24000, 'Jaguar':52000,
+  'Jeep':38000, 'Kia':23000, 'Land Rover':58000, 'Lexus':46000,
+  'Mazda':26000, 'Mercedes-Benz':50000, 'Mini':32000, 'Mitsubishi':22000,
+  'Nissan':22000, 'Opel':20000, 'Peugeot':22000, 'Porsche':80000,
+  'Renault':21000, 'Seat':24000, 'Skoda':26000, 'Subaru':28000,
+  'Suzuki':18000, 'Tesla':55000, 'Toyota':28000, 'Volkswagen':30000,
+  'Volvo':42000,
 };
 const FUEL_FACTORS      = { petrol:1.0, diesel:1.05, hybrid:1.12, electric:1.2, lpg:0.85 };
 const CONDITION_FACTORS = { excellent:1.0, good:0.88, fair:0.74, poor:0.58 };
 const CONDITION_GR      = { excellent:'Άριστη', good:'Καλή', fair:'Μέτρια', poor:'Κακή' };
 const FUEL_GR           = { petrol:'Βενζίνη', diesel:'Diesel', hybrid:'Υβριδικό', electric:'Ηλεκτρικό', lpg:'LPG/CNG' };
 
-/* ── Global data ─────────────────────────────────────────── */
+/* ── Global ──────────────────────────────────────────────── */
 let ALL_CARS = [];
 
 /* ════════════════════════════════════════════════════════════
@@ -39,15 +62,13 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ════════════════════════════════════════════════════════════
-   LOAD CARS FROM GOOGLE SHEETS
+   LOAD FROM GOOGLE SHEETS
    ════════════════════════════════════════════════════════════ */
 async function loadCars() {
   showLoading(true);
   try {
     const res  = await fetch(SHEET_URL);
     const text = await res.text();
-
-    // Google wraps response in /*O_o*/ google.visualization.Query.setResponse({...});
     const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
     const rows = json.table.rows;
     const cols = json.table.cols.map(c => c.label.toLowerCase().trim());
@@ -59,24 +80,28 @@ async function loadCars() {
           const cell = row.c[i];
           car[col] = cell ? (cell.v !== null && cell.v !== undefined ? cell.v : '') : '';
         });
-        // Parse features: comma or pipe separated string → array
+        // Features: comma or pipe separated → array
         if (car.features && typeof car.features === 'string') {
           car.features = car.features.split(/[,|]/).map(f => f.trim()).filter(Boolean);
         } else {
           car.features = [];
         }
-        // Ensure numbers
+        // Numbers
         car.year  = parseInt(car.year)  || 0;
         car.km    = parseInt(car.km)    || 0;
         car.hp    = parseInt(car.hp)    || 0;
         car.price = parseInt(car.price) || 0;
+        // Badge: lowercase trim
+        car.badge = (car.badge || '').toString().toLowerCase().trim();
+        // Photo: column "photo" in sheet — Google Drive share link or imgur
+        car.photo = (car.photo || '').toString().trim();
         return car;
       })
-      .filter(car => car.make && car.model && car.price > 0); // skip empty rows
+      .filter(car => car.make && car.model && car.price > 0);
 
     renderCars(ALL_CARS);
   } catch (err) {
-    console.error('Google Sheets load error:', err);
+    console.error('Sheets error:', err);
     showError();
   } finally {
     showLoading(false);
@@ -94,14 +119,43 @@ function showLoading(show) {
 
 function showError() {
   document.getElementById('carsLoading').classList.add('hidden');
-  const noRes = document.getElementById('noResults');
-  noRes.classList.remove('hidden');
-  noRes.querySelector('p').textContent = '❌ Σφάλμα φόρτωσης. Ανανεώστε τη σελίδα.';
+  const el = document.getElementById('noResults');
+  el.classList.remove('hidden');
+  el.querySelector('p').textContent = '❌ Σφάλμα φόρτωσης. Ανανεώστε τη σελίδα.';
 }
 
 /* ════════════════════════════════════════════════════════════
    RENDER CARS
    ════════════════════════════════════════════════════════════ */
+function getBadgeHTML(badge) {
+  if (!badge) return '';
+  const style = BADGE_STYLES[badge];
+  if (style) {
+    return `<span class="car-badge" style="background:${style.bg};color:${style.color};">${style.label}</span>`;
+  }
+  // Unknown badge → show as-is with default style
+  return `<span class="car-badge" style="background:rgba(100,100,100,0.85);color:#fff;">${badge.toUpperCase()}</span>`;
+}
+
+function getCarImageHTML(car) {
+  if (car.photo) {
+    // Convert Google Drive share link to direct image link if needed
+    let src = car.photo;
+    const driveMatch = src.match(/\/file\/d\/([^/]+)/);
+    if (driveMatch) {
+      src = `https://drive.google.com/thumbnail?id=${driveMatch[1]}&sz=w600`;
+    }
+    return `<img src="${src}" alt="${car.make} ${car.model}" class="car-photo" onerror="this.parentElement.innerHTML=getCarSVG()" loading="lazy" />`;
+  }
+  return `<svg viewBox="0 0 64 32" fill="none" stroke="currentColor" stroke-width="1.5">
+    <rect x="4" y="12" width="56" height="14" rx="3"/>
+    <path d="M16 12 L22 4 L42 4 L48 12"/>
+    <circle cx="18" cy="26" r="5"/><circle cx="46" cy="26" r="5"/>
+    <circle cx="18" cy="26" r="2.5" fill="currentColor"/>
+    <circle cx="46" cy="26" r="2.5" fill="currentColor"/>
+  </svg>`;
+}
+
 function renderCars(cars) {
   const grid    = document.getElementById('carsGrid');
   const noRes   = document.getElementById('noResults');
@@ -126,19 +180,11 @@ function renderCars(cars) {
     const card = document.createElement('div');
     card.className = 'car-card';
     card.style.animationDelay = `${idx * 0.06}s`;
-    const badge = (car.badge || '').toString().toLowerCase().trim();
 
     card.innerHTML = `
-      <div class="car-img-placeholder">
-        <svg viewBox="0 0 64 32" fill="none" stroke="currentColor" stroke-width="1.5">
-          <rect x="4" y="12" width="56" height="14" rx="3"/>
-          <path d="M16 12 L22 4 L42 4 L48 12"/>
-          <circle cx="18" cy="26" r="5"/><circle cx="46" cy="26" r="5"/>
-          <circle cx="18" cy="26" r="2.5" fill="currentColor"/>
-          <circle cx="46" cy="26" r="2.5" fill="currentColor"/>
-        </svg>
-        ${badge === 'hot' ? '<span class="car-badge badge-hot">HOT</span>' :
-          badge === 'new' ? '<span class="car-badge badge-new">ΝΕΟ</span>' : ''}
+      <div class="car-img-placeholder ${car.photo ? 'has-photo' : ''}">
+        ${getCarImageHTML(car)}
+        ${getBadgeHTML(car.badge)}
       </div>
       <div class="car-info">
         <p class="car-make">${car.make}</p>
@@ -183,7 +229,7 @@ function renderCars(cars) {
 }
 
 /* ════════════════════════════════════════════════════════════
-   FILTERS (client-side on loaded data)
+   FILTERS
    ════════════════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('applyFilters').addEventListener('click', applyFilters);
@@ -203,13 +249,12 @@ function applyFilters() {
   const filtered = ALL_CARS.filter(car => {
     if (make    && car.make    !== make)    return false;
     if (model   && !car.model.toLowerCase().includes(model)) return false;
-    if (year    && car.year < year)         return false;
+    if (year    && car.year    <  year)     return false;
     if (fuel    && car.fuel    !== fuel)    return false;
     if (gearbox && car.gearbox !== gearbox) return false;
     if (car.km  > maxKm)                   return false;
     return true;
   });
-
   renderCars(filtered);
 }
 
@@ -221,10 +266,7 @@ function resetFilters() {
   renderCars(ALL_CARS);
 }
 
-function debounce(fn, delay) {
-  let t;
-  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), delay); };
-}
+function debounce(fn, d) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), d); }; }
 
 /* ════════════════════════════════════════════════════════════
    MODAL
@@ -234,7 +276,16 @@ function openModal(car) {
   const content = document.getElementById('modalContent');
   const features = Array.isArray(car.features) ? car.features : [];
 
+  let photoHTML = '';
+  if (car.photo) {
+    let src = car.photo;
+    const driveMatch = src.match(/\/file\/d\/([^/]+)/);
+    if (driveMatch) src = `https://drive.google.com/thumbnail?id=${driveMatch[1]}&sz=w800`;
+    photoHTML = `<img src="${src}" alt="${car.make} ${car.model}" style="width:100%;height:220px;object-fit:cover;border-radius:10px;margin-bottom:1.5rem;" loading="lazy" />`;
+  }
+
   content.innerHTML = `
+    ${photoHTML}
     <div style="margin-bottom:1.5rem;">
       <p style="font-family:'Orbitron',sans-serif;font-size:.65rem;letter-spacing:.2em;color:#B1121A;text-transform:uppercase;margin-bottom:.4rem;">${car.make}</p>
       <h2 style="font-size:1.4rem;color:#fff;margin-bottom:.5rem;font-family:'Orbitron',sans-serif;">${car.model}</h2>
@@ -246,7 +297,7 @@ function openModal(car) {
         ['Χιλιόμετρα', Number(car.km).toLocaleString('el-GR') + ' km'],
         ['Καύσιμο',    car.fuel],
         ['Κιβώτιο',    car.gearbox],
-        ['Ιπποδύναμη', car.hp + ' hp'],
+        ['Ιπποδύναμη', (car.hp || '—') + (car.hp ? ' hp' : '')],
         ['Κατάσταση',  car.condition],
       ].map(([l,v]) => `
         <div style="background:#1C1C1C;border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:.75rem 1rem;">
@@ -288,11 +339,9 @@ function initNavbar() {
   const navbar    = document.getElementById('navbar');
   const hamburger = document.getElementById('hamburger');
   const navLinks  = document.getElementById('navLinks');
-
   window.addEventListener('scroll', () => {
     navbar.classList.toggle('scrolled', window.scrollY > 60);
   }, { passive: true });
-
   hamburger.addEventListener('click', () => {
     hamburger.classList.toggle('active');
     navLinks.classList.toggle('open');
@@ -306,7 +355,7 @@ function initNavbar() {
 }
 
 /* ════════════════════════════════════════════════════════════
-   HERO COUNTERS
+   COUNTERS
    ════════════════════════════════════════════════════════════ */
 function initCounters() {
   let started = false;
@@ -345,8 +394,7 @@ function initReveal() {
    ════════════════════════════════════════════════════════════ */
 function initValuation() {
   const yearSel = document.getElementById('valYear');
-  const y = new Date().getFullYear();
-  for (let i = y; i >= 2000; i--) {
+  for (let i = new Date().getFullYear(); i >= 1990; i--) {
     const o = document.createElement('option');
     o.value = i; o.textContent = i;
     yearSel.appendChild(o);
@@ -361,20 +409,16 @@ function runEstimation() {
   const km        = parseInt(document.getElementById('valKm').value);
   const fuel      = document.getElementById('valFuel').value;
   const condition = document.getElementById('valCondition').value;
-
   if (!make || !model || !year || isNaN(km) || !fuel || !condition) {
     alert('⚠️ Συμπληρώστε όλα τα υποχρεωτικά πεδία.');
     return;
   }
-
   document.getElementById('valResult').classList.add('hidden');
   document.getElementById('valLoading').classList.remove('hidden');
-
   ['step1','step2','step3','step4'].forEach((id, i) => {
     document.getElementById(id).classList.remove('active');
     setTimeout(() => document.getElementById(id).classList.add('active'), i * 500 + 100);
   });
-
   setTimeout(() => {
     const result = calcValue({ make, year, km, fuel, condition });
     displayResult(result, { make, model, year, km, fuel, condition });
@@ -419,24 +463,44 @@ function displayResult(result, params) {
 }
 
 /* ════════════════════════════════════════════════════════════
-   CONTACT FORM
+   CONTACT FORM — Formspree
    ════════════════════════════════════════════════════════════ */
 function initContact() {
-  document.getElementById('contactForm').addEventListener('submit', e => {
+  const form = document.getElementById('contactForm');
+  form.addEventListener('submit', async e => {
     e.preventDefault();
     const name  = document.getElementById('cName').value.trim();
     const email = document.getElementById('cEmail').value.trim();
     const msg   = document.getElementById('cMsg').value.trim();
     if (!name || !email || !msg) return;
-    const btn = e.target.querySelector('[type=submit]');
+
+    const btn = form.querySelector('[type=submit]');
     btn.textContent = 'Αποστολή...';
     btn.disabled = true;
-    setTimeout(() => {
-      e.target.reset();
+
+    try {
+      // If Formspree ID set, use it — otherwise simulate
+      if (FORMSPREE_ID) {
+        const res = await fetch(`https://formspree.io/f/${FORMSPREE_ID}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({
+            name:    document.getElementById('cName').value,
+            email:   document.getElementById('cEmail').value,
+            phone:   document.getElementById('cPhone').value,
+            message: document.getElementById('cMsg').value,
+          })
+        });
+        if (!res.ok) throw new Error('Form error');
+      }
+      form.reset();
       document.getElementById('formSuccess').classList.remove('hidden');
+    } catch (err) {
+      alert('❌ Σφάλμα αποστολής. Επικοινωνήστε στο ' + FORMSPREE_EMAIL);
+    } finally {
       btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Αποστολή Μηνύματος`;
       btn.disabled = false;
-    }, 1500);
+    }
   });
 }
 
