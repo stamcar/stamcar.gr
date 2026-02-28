@@ -1229,29 +1229,15 @@ body::before { z-index: -1; }
 @media (max-width: 900px) {
   .nav-links, .nav-cta { display: none; }
   .nav-hamburger { display: flex; }
-
   .nav-links {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(10,10,10,0.98);
-    backdrop-filter: blur(20px);
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-    z-index: -1;
-    padding: 2rem;
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(10,10,10,0.98); backdrop-filter: blur(20px);
+    flex-direction: column; align-items: center; justify-content: center;
+    gap: 1rem; z-index: -1; padding: 2rem;
   }
-  .nav-links.open {
-    display: flex;
-    z-index: 999;
-  }
-  .nav-links a {
-    font-size: 1.2rem;
-    padding: 1rem 2rem;
-  }
+  .nav-links.open { display: flex; z-index: 999; }
+  .nav-links a { font-size: 1.2rem; padding: 1rem 2rem; }
   .nav-links a::after { display: none; }
-
   .contact-wrapper { grid-template-columns: 1fr; gap: 2rem; }
   .form-grid { grid-template-columns: 1fr; }
   .hero-stats { gap: 1rem; }
@@ -1260,12 +1246,49 @@ body::before { z-index: -1; }
 
 @media (max-width: 600px) {
   section { padding: 4rem 0; }
+
+  /* HERO */
+  .hero-content { padding: 0 1.25rem; padding-top: 5rem; }
+  .hero-title { font-size: clamp(2.8rem, 16vw, 5rem); word-break: break-word; }
+  .hero-subtitle { font-size: .75rem; letter-spacing: .06em; white-space: normal; }
+  .hero-scroll-indicator { display: none; }
+
+  /* BUTTONS */
   .hero-btns { flex-direction: column; }
   .hero-btns .btn { width: 100%; justify-content: center; }
-  .filter-row { grid-template-columns: 1fr 1fr; }
+
+  /* STATS */
+  .hero-stats { gap: .75rem; flex-wrap: wrap; }
+  .stat-num { font-size: 1.6rem; }
+  .stat-plus { font-size: 1rem; }
+  .stat-label { font-size: .62rem; }
+  .stat-divider { height: 40px; }
+
+  /* FILTERS - 1 column */
+  .filter-row { grid-template-columns: 1fr; }
+  .filter-group input, .filter-group select { font-size: 16px; }
+  .filter-actions { flex-direction: column; }
+  .filter-actions .btn { width: 100%; justify-content: center; }
+  .search-filters { padding: 1.25rem; }
+
+  /* CARS */
+  .cars-grid { grid-template-columns: 1fr; }
+
+  /* SERVICES */
+  .services-grid { grid-template-columns: 1fr; }
+
+  /* FOOTER */
   .footer-inner { flex-direction: column; text-align: center; }
   .footer-links { justify-content: center; }
+
+  /* VALUATION */
   .result-factors { grid-template-columns: 1fr; }
+  .valuation-form { padding: 1.5rem; }
+  .result-price { font-size: 2.2rem; }
+
+  /* MODAL */
+  .modal-content { padding: 1.5rem; }
+  .modal-box { max-height: 92vh; }
 }
 
 /* ── CAR LOADING STATE ─────────────────────────────────── */
