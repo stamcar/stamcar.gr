@@ -1,34 +1,16 @@
 /* ═══════════════════════════════════════════════════════════
    STAMCAR — app.js
-   Supabase integration — real-time database, no localStorage
+   Data source: Google Sheets (public)
    ═══════════════════════════════════════════════════════════ */
 
 'use strict';
 
-/* ── SUPABASE CONFIG ─────────────────────────────────────── */
-const SUPABASE_URL  = 'https://cdyhsmayzoqbtognfovj.supabase.co';
-const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkeWhzbWF5em9xYnRvZ25mb3ZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMTgyNTgsImV4cCI6MjA4Nzc5NDI1OH0.FzpLaM8VIsDqQFFVRnrHiuhFDD9jyL5hihidnj7DzQI';
+/* ── GOOGLE SHEETS CONFIG ────────────────────────────────── */
+// Για να προσθέσεις/αφαιρέσεις αμάξι: άνοιξε το Google Sheet και άλλαξε γραμμές
+const SHEET_ID  = '1SGtbhM-LnqbeR4t3P_iV2cA8ip8gvroM9lbUF5ZhXTg';
+const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=Φύλλο1`;
 
-/* ── Simple Supabase REST helper ─────────────────────────── */
-const db = {
-  async query(table, params = '') {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`, {
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`,
-        'Content-Type': 'application/json'
-      }
-    });
-    if (!res.ok) throw new Error(`DB error: ${res.status}`);
-    return res.json();
-  }
-};
-
-/* ── Global car data (fetched from Supabase) ─────────────── */
-let ALL_CARS = [];
-let FILTERED_CARS = [];
-
-/* ── AI Valuation data ───────────────────────────────────── */
+/* ── AI Valuation ────────────────────────────────────────── */
 const BASE_PRICES = {
   'BMW':46000,'Mercedes-Benz':50000,'Audi':44000,'Volkswagen':30000,
   'Toyota':28000,'Ford':26000,'Hyundai':24000,'Kia':23000,
@@ -39,8 +21,11 @@ const CONDITION_FACTORS = { excellent:1.0, good:0.88, fair:0.74, poor:0.58 };
 const CONDITION_GR      = { excellent:'Άριστη', good:'Καλή', fair:'Μέτρια', poor:'Κακή' };
 const FUEL_GR           = { petrol:'Βενζίνη', diesel:'Diesel', hybrid:'Υβριδικό', electric:'Ηλεκτρικό', lpg:'LPG/CNG' };
 
+/* ── Global data ─────────────────────────────────────────── */
+let ALL_CARS = [];
+
 /* ════════════════════════════════════════════════════════════
-   INIT — load everything on DOMContentLoaded
+   INIT
    ════════════════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
   initNavbar();
@@ -50,44 +35,55 @@ document.addEventListener('DOMContentLoaded', () => {
   initContact();
   initModal();
   initCursorGlow();
-  loadCars(); // fetch from Supabase
+  loadCars();
 });
 
 /* ════════════════════════════════════════════════════════════
-   LOAD CARS FROM SUPABASE
+   LOAD CARS FROM GOOGLE SHEETS
    ════════════════════════════════════════════════════════════ */
-async function loadCars(filters = {}) {
-  showCarsLoading(true);
-
+async function loadCars() {
+  showLoading(true);
   try {
-    let params = 'select=*&order=id.asc';
+    const res  = await fetch(SHEET_URL);
+    const text = await res.text();
 
-    // Apply server-side filters where possible
-    if (filters.make)    params += `&make=eq.${encodeURIComponent(filters.make)}`;
-    if (filters.fuel)    params += `&fuel=eq.${encodeURIComponent(filters.fuel)}`;
-    if (filters.gearbox) params += `&gearbox=eq.${encodeURIComponent(filters.gearbox)}`;
-    if (filters.year)    params += `&year=gte.${filters.year}`;
-    if (filters.km)      params += `&km=lte.${filters.km}`;
+    // Google wraps response in /*O_o*/ google.visualization.Query.setResponse({...});
+    const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
+    const rows = json.table.rows;
+    const cols = json.table.cols.map(c => c.label.toLowerCase().trim());
 
-    const cars = await db.query('cars', params);
+    ALL_CARS = rows
+      .map(row => {
+        const car = {};
+        cols.forEach((col, i) => {
+          const cell = row.c[i];
+          car[col] = cell ? (cell.v !== null && cell.v !== undefined ? cell.v : '') : '';
+        });
+        // Parse features: comma or pipe separated string → array
+        if (car.features && typeof car.features === 'string') {
+          car.features = car.features.split(/[,|]/).map(f => f.trim()).filter(Boolean);
+        } else {
+          car.features = [];
+        }
+        // Ensure numbers
+        car.year  = parseInt(car.year)  || 0;
+        car.km    = parseInt(car.km)    || 0;
+        car.hp    = parseInt(car.hp)    || 0;
+        car.price = parseInt(car.price) || 0;
+        return car;
+      })
+      .filter(car => car.make && car.model && car.price > 0); // skip empty rows
 
-    // Client-side model filter (partial match)
-    ALL_CARS = filters.model
-      ? cars.filter(c => c.model.toLowerCase().includes(filters.model.toLowerCase()))
-      : cars;
-
-    FILTERED_CARS = ALL_CARS;
     renderCars(ALL_CARS);
-
   } catch (err) {
-    console.error('Failed to load cars:', err);
+    console.error('Google Sheets load error:', err);
     showError();
   } finally {
-    showCarsLoading(false);
+    showLoading(false);
   }
 }
 
-function showCarsLoading(show) {
+function showLoading(show) {
   document.getElementById('carsLoading').classList.toggle('hidden', !show);
   if (show) {
     document.getElementById('carsGrid').classList.add('hidden');
@@ -98,24 +94,24 @@ function showCarsLoading(show) {
 
 function showError() {
   document.getElementById('carsLoading').classList.add('hidden');
-  document.getElementById('noResults').classList.remove('hidden');
-  document.getElementById('noResults').querySelector('p').textContent =
-    '❌ Σφάλμα φόρτωσης. Ανανεώστε τη σελίδα.';
+  const noRes = document.getElementById('noResults');
+  noRes.classList.remove('hidden');
+  noRes.querySelector('p').textContent = '❌ Σφάλμα φόρτωσης. Ανανεώστε τη σελίδα.';
 }
 
 /* ════════════════════════════════════════════════════════════
-   RENDER CAR CARDS
+   RENDER CARS
    ════════════════════════════════════════════════════════════ */
 function renderCars(cars) {
-  const grid     = document.getElementById('carsGrid');
-  const noRes    = document.getElementById('noResults');
-  const resInfo  = document.getElementById('resultsInfo');
-  const countEl  = document.getElementById('resultsCount');
+  const grid    = document.getElementById('carsGrid');
+  const noRes   = document.getElementById('noResults');
+  const resInfo = document.getElementById('resultsInfo');
+  const countEl = document.getElementById('resultsCount');
 
   resInfo.classList.remove('hidden');
   countEl.textContent = cars.length;
 
-  if (cars.length === 0) {
+  if (!cars.length) {
     grid.classList.add('hidden');
     noRes.classList.remove('hidden');
     noRes.querySelector('p').textContent = 'Δεν βρέθηκαν αυτοκίνητα με αυτά τα κριτήρια.';
@@ -130,8 +126,7 @@ function renderCars(cars) {
     const card = document.createElement('div');
     card.className = 'car-card';
     card.style.animationDelay = `${idx * 0.06}s`;
-
-    const features = Array.isArray(car.features) ? car.features : [];
+    const badge = (car.badge || '').toString().toLowerCase().trim();
 
     card.innerHTML = `
       <div class="car-img-placeholder">
@@ -142,7 +137,8 @@ function renderCars(cars) {
           <circle cx="18" cy="26" r="2.5" fill="currentColor"/>
           <circle cx="46" cy="26" r="2.5" fill="currentColor"/>
         </svg>
-        ${car.badge ? `<span class="car-badge badge-${car.badge}">${car.badge === 'new' ? 'ΝΕΟ' : 'HOT'}</span>` : ''}
+        ${badge === 'hot' ? '<span class="car-badge badge-hot">HOT</span>' :
+          badge === 'new' ? '<span class="car-badge badge-new">ΝΕΟ</span>' : ''}
       </div>
       <div class="car-info">
         <p class="car-make">${car.make}</p>
@@ -175,7 +171,7 @@ function renderCars(cars) {
         </div>
         <div class="car-price-row">
           <p class="car-price">${Number(car.price).toLocaleString('el-GR')} €</p>
-          <button class="car-details-btn" data-id="${car.id}">Λεπτομέρειες</button>
+          <button class="car-details-btn" data-idx="${idx}">Λεπτομέρειες</button>
         </div>
       </div>
     `;
@@ -187,26 +183,34 @@ function renderCars(cars) {
 }
 
 /* ════════════════════════════════════════════════════════════
-   FILTERS
+   FILTERS (client-side on loaded data)
    ════════════════════════════════════════════════════════════ */
-(function initFilters() {
-  document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('applyFilters').addEventListener('click', applyFilters);
-    document.getElementById('resetFilters').addEventListener('click', resetFilters);
-    document.getElementById('resetFilters2').addEventListener('click', resetFilters);
-    document.getElementById('filterModel').addEventListener('input', debounce(applyFilters, 400));
-  });
-})();
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('applyFilters').addEventListener('click', applyFilters);
+  document.getElementById('resetFilters').addEventListener('click', resetFilters);
+  document.getElementById('resetFilters2').addEventListener('click', resetFilters);
+  document.getElementById('filterModel').addEventListener('input', debounce(applyFilters, 350));
+});
 
 function applyFilters() {
-  loadCars({
-    make:    document.getElementById('filterMake').value,
-    model:   document.getElementById('filterModel').value.trim(),
-    year:    document.getElementById('filterYear').value,
-    fuel:    document.getElementById('filterFuel').value,
-    gearbox: document.getElementById('filterGearbox').value,
-    km:      document.getElementById('filterKm').value,
+  const make    = document.getElementById('filterMake').value;
+  const model   = document.getElementById('filterModel').value.toLowerCase().trim();
+  const year    = parseInt(document.getElementById('filterYear').value) || 0;
+  const fuel    = document.getElementById('filterFuel').value;
+  const gearbox = document.getElementById('filterGearbox').value;
+  const maxKm   = parseInt(document.getElementById('filterKm').value) || Infinity;
+
+  const filtered = ALL_CARS.filter(car => {
+    if (make    && car.make    !== make)    return false;
+    if (model   && !car.model.toLowerCase().includes(model)) return false;
+    if (year    && car.year < year)         return false;
+    if (fuel    && car.fuel    !== fuel)    return false;
+    if (gearbox && car.gearbox !== gearbox) return false;
+    if (car.km  > maxKm)                   return false;
+    return true;
   });
+
+  renderCars(filtered);
 }
 
 function resetFilters() {
@@ -214,7 +218,7 @@ function resetFilters() {
     document.getElementById(id).value = '';
   });
   document.getElementById('filterModel').value = '';
-  loadCars();
+  renderCars(ALL_CARS);
 }
 
 function debounce(fn, delay) {
@@ -223,7 +227,7 @@ function debounce(fn, delay) {
 }
 
 /* ════════════════════════════════════════════════════════════
-   CAR MODAL
+   MODAL
    ════════════════════════════════════════════════════════════ */
 function openModal(car) {
   const modal   = document.getElementById('carModal');
@@ -233,17 +237,17 @@ function openModal(car) {
   content.innerHTML = `
     <div style="margin-bottom:1.5rem;">
       <p style="font-family:'Orbitron',sans-serif;font-size:.65rem;letter-spacing:.2em;color:#B1121A;text-transform:uppercase;margin-bottom:.4rem;">${car.make}</p>
-      <h2 style="font-size:1.5rem;color:#fff;margin-bottom:.5rem;font-family:'Orbitron',sans-serif;">${car.model}</h2>
-      <p style="font-family:'Orbitron',sans-serif;font-size:2rem;font-weight:900;background:linear-gradient(135deg,#fff,#c8c8c8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">${Number(car.price).toLocaleString('el-GR')} €</p>
+      <h2 style="font-size:1.4rem;color:#fff;margin-bottom:.5rem;font-family:'Orbitron',sans-serif;">${car.model}</h2>
+      <p style="font-family:'Orbitron',sans-serif;font-size:1.9rem;font-weight:900;background:linear-gradient(135deg,#fff,#c8c8c8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">${Number(car.price).toLocaleString('el-GR')} €</p>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.5rem;">
       ${[
         ['Χρονολογία', car.year],
         ['Χιλιόμετρα', Number(car.km).toLocaleString('el-GR') + ' km'],
-        ['Καύσιμο', car.fuel],
-        ['Κιβώτιο', car.gearbox],
+        ['Καύσιμο',    car.fuel],
+        ['Κιβώτιο',    car.gearbox],
         ['Ιπποδύναμη', car.hp + ' hp'],
-        ['Κατάσταση', car.condition],
+        ['Κατάσταση',  car.condition],
       ].map(([l,v]) => `
         <div style="background:#1C1C1C;border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:.75rem 1rem;">
           <p style="font-family:'Orbitron',sans-serif;font-size:.58rem;letter-spacing:.15em;color:#666;text-transform:uppercase;margin-bottom:.2rem;">${l}</p>
@@ -269,9 +273,9 @@ function openModal(car) {
 }
 
 function initModal() {
-  const modal   = document.getElementById('carModal');
+  const modal    = document.getElementById('carModal');
   const closeBtn = document.getElementById('modalClose');
-  const close = () => { modal.classList.add('hidden'); document.body.style.overflow = ''; };
+  const close    = () => { modal.classList.add('hidden'); document.body.style.overflow = ''; };
   closeBtn.addEventListener('click', close);
   modal.addEventListener('click', e => { if (e.target === modal) close(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
@@ -329,7 +333,9 @@ function initCounters() {
    ════════════════════════════════════════════════════════════ */
 function initReveal() {
   const obs = new IntersectionObserver(entries => {
-    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); }
+    });
   }, { threshold: 0.12 });
   document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
 }
@@ -380,7 +386,7 @@ function calcValue({ make, year, km, fuel, condition }) {
   const age  = new Date().getFullYear() - year;
   let price  = base;
   if (age > 0) { price *= 0.88; for (let i = 1; i < age; i++) price *= 0.92; }
-  const expKm   = age * 20000;
+  const expKm    = age * 20000;
   const excessKm = Math.max(0, km - expKm);
   const kmFactor = Math.max(0.5, 1 - excessKm * 0.004 / 10000);
   const fuelMult = FUEL_FACTORS[fuel] || 1;
@@ -390,15 +396,12 @@ function calcValue({ make, year, km, fuel, condition }) {
   if (BASE_PRICES[make]) conf += 8;
   if (age <= 5) conf += 5;
   if (km < 100000) conf += 3;
-  conf = Math.min(96, conf);
-  return { price, confidence: conf, kmFactor, fuelMult, condMult, age, excessKm };
+  return { price, confidence: Math.min(96, conf), kmFactor, fuelMult, condMult, age };
 }
 
 function displayResult(result, params) {
   document.getElementById('valLoading').classList.add('hidden');
-  const el = document.getElementById('valResult');
-  el.classList.remove('hidden');
-
+  document.getElementById('valResult').classList.remove('hidden');
   document.getElementById('resultVehicleName').textContent = `${params.make} ${params.model} (${params.year})`;
   document.getElementById('resultPrice').textContent = result.price.toLocaleString('el-GR') + ' €';
   const low  = Math.round(result.price * 0.92 / 100) * 100;
@@ -406,7 +409,6 @@ function displayResult(result, params) {
   document.getElementById('resultRange').textContent = `Εύρος: ${low.toLocaleString('el-GR')} € – ${high.toLocaleString('el-GR')} €`;
   document.getElementById('confidenceVal').textContent = result.confidence + '%';
   setTimeout(() => { document.getElementById('confidenceBar').style.width = result.confidence + '%'; }, 100);
-
   const kmImpact = Math.round((1 - result.kmFactor) * 100);
   document.getElementById('resultFactors').innerHTML = `
     <div class="factor-item"><p class="factor-label">Ηλικία</p><p class="factor-value ${result.age > 8 ? 'negative' : ''}">${result.age} έτη</p></div>
