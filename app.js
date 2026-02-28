@@ -7,185 +7,22 @@
 /* ── CAR DATA ────────────────────────────────────────────── */
 const CAR_DATA = [
   {
-    "id": 3,
-    "make": "Audi",
-    "model": "A4 2.0 TDI S line",
-    "year": 2022,
-    "km": 31000,
-    "fuel": "Diesel",
-    "gearbox": "Αυτόματο",
-    "hp": 150,
-    "condition": "Άριστη",
-    "price": 41900,
-    "badge": "new",
-    "features": [
-      "Virtual cockpit",
-      "MMI Navigation",
-      "Matrix LED",
-      "Quattro AWD",
-      "S line exterior"
-    ]
-  },
-  {
     "id": 4,
-    "make": "Volkswagen",
-    "model": "Golf 8 GTI",
-    "year": 2023,
-    "km": 14000,
-    "fuel": "Βενζίνη",
-    "gearbox": "Αυτόματο",
-    "hp": 245,
+    "make": "Opel",
+    "model": "Corsa",
+    "year": 2013,
+    "km": 270000,
+    "fuel": "Diesel",
+    "gearbox": "Χειροκίνητο",
+    "hp": 95,
     "condition": "Άριστη",
-    "price": 36800,
-    "badge": "new",
+    "price": 5500,
+    "badge": "hot",
     "features": [
       "IQ.LIGHT",
       "Dynaudio ηχοσύστημα",
       "DCC ανάρτηση",
       "Digital cockpit Pro"
-    ]
-  },
-  {
-    "id": 5,
-    "make": "Toyota",
-    "model": "Corolla 1.8 Hybrid",
-    "year": 2022,
-    "km": 44000,
-    "fuel": "Υβριδικό",
-    "gearbox": "Αυτόματο",
-    "hp": 122,
-    "condition": "Άριστη",
-    "price": 22900,
-    "badge": null,
-    "features": [
-      "Toyota Safety Sense",
-      "Αυτόματο κλιματισμό",
-      "JBL ηχοσύστημα"
-    ]
-  },
-  {
-    "id": 6,
-    "make": "BMW",
-    "model": "X3 xDrive20d M Sport",
-    "year": 2020,
-    "km": 78000,
-    "fuel": "Diesel",
-    "gearbox": "Αυτόματο",
-    "hp": 190,
-    "condition": "Καλή",
-    "price": 39500,
-    "badge": null,
-    "features": [
-      "M Sport πακέτο",
-      "Panoramic roof",
-      "Harman Kardon"
-    ]
-  },
-  {
-    "id": 7,
-    "make": "Mercedes-Benz",
-    "model": "GLC 220d 4MATIC",
-    "year": 2021,
-    "km": 62000,
-    "fuel": "Diesel",
-    "gearbox": "Αυτόματο",
-    "hp": 194,
-    "condition": "Άριστη",
-    "price": 47900,
-    "badge": null,
-    "features": [
-      "Burmester ηχοσύστημα",
-      "360° κάμερα",
-      "Airmatic ανάρτηση"
-    ]
-  },
-  {
-    "id": 8,
-    "make": "Hyundai",
-    "model": "Tucson 1.6 T-GDI Hybrid",
-    "year": 2023,
-    "km": 18000,
-    "fuel": "Υβριδικό",
-    "gearbox": "Αυτόματο",
-    "hp": 230,
-    "condition": "Άριστη",
-    "price": 34900,
-    "badge": "new",
-    "features": [
-      "Panoramic roof",
-      "Bose ηχοσύστημα",
-      "HUD",
-      "Wireless CarPlay"
-    ]
-  },
-  {
-    "id": 9,
-    "make": "Audi",
-    "model": "Q5 40 TDI quattro S line",
-    "year": 2021,
-    "km": 55000,
-    "fuel": "Diesel",
-    "gearbox": "Αυτόματο",
-    "hp": 204,
-    "condition": "Καλή",
-    "price": 44500,
-    "badge": null,
-    "features": [
-      "Virtual cockpit plus",
-      "B&O ηχοσύστημα",
-      "Matrix LED"
-    ]
-  },
-  {
-    "id": 10,
-    "make": "Volkswagen",
-    "model": "Passat 2.0 TDI Business",
-    "year": 2020,
-    "km": 89000,
-    "fuel": "Diesel",
-    "gearbox": "Αυτόματο",
-    "hp": 150,
-    "condition": "Καλή",
-    "price": 21900,
-    "badge": null,
-    "features": [
-      "Digital cockpit",
-      "Keyless",
-      "Κάμερα όπισθεν"
-    ]
-  },
-  {
-    "id": 11,
-    "make": "Kia",
-    "model": "EV6 AWD GT-Line",
-    "year": 2023,
-    "km": 22000,
-    "fuel": "Ηλεκτρικό",
-    "gearbox": "Αυτόματο",
-    "hp": 325,
-    "condition": "Άριστη",
-    "price": 49900,
-    "badge": "new",
-    "features": [
-      "800V γρήγορη φόρτιση",
-      "HUD",
-      "Meridian ηχοσύστημα"
-    ]
-  },
-  {
-    "id": 13,
-    "make": "Fiat",
-    "model": "pundo",
-    "year": 2005,
-    "km": 200000,
-    "fuel": "Diesel",
-    "gearbox": "Χειροκίνητο",
-    "hp": 110,
-    "condition": "Καλή",
-    "price": 5000,
-    "badge": "hot",
-    "features": [
-      "TDI"
     ]
   }
 ];
@@ -698,4 +535,5 @@ function openModal(car) {
 
 console.log('%cSTAMCAR — Premium Automotive', 'color:#B1121A;font-family:Orbitron,sans-serif;font-size:18px;font-weight:900;letter-spacing:4px;');
 console.log('%cΑγορά – Εύρεση – Πώληση Αυτοκινήτων', 'color:#888;font-family:Montserrat,sans-serif;font-size:12px;');
+
 
