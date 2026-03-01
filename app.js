@@ -139,23 +139,56 @@ function getBadgeHTML(badge) {
   return `<span class="car-badge" style="background:rgba(100,100,100,0.85);color:#fff;">${badge.toUpperCase()}</span>`;
 }
 
-function getCarImageHTML(car) {
-  if (car.photo) {
-    // Convert Google Drive share link to direct image link if needed
-    let src = car.photo;
+function parsePhotos(photoStr) {
+  if (!photoStr) return [];
+  return photoStr.split(',').map(s => s.trim()).filter(Boolean).map(src => {
     const driveMatch = src.match(/\/file\/d\/([^/]+)/);
-    if (driveMatch) {
-      src = `https://drive.google.com/thumbnail?id=${driveMatch[1]}&sz=w600`;
-    }
-    return `<img src="${src}" alt="${car.make} ${car.model}" class="car-photo" onerror="this.parentElement.innerHTML=getCarSVG()" loading="lazy" />`;
+    if (driveMatch) return `https://drive.google.com/thumbnail?id=${driveMatch[1]}&sz=w800`;
+    return src;
+  });
+}
+
+function getCarImageHTML(car) {
+  const photos = parsePhotos(car.photo);
+  if (photos.length === 0) {
+    return `<svg viewBox="0 0 64 32" fill="none" stroke="currentColor" stroke-width="1.5">
+      <rect x="4" y="12" width="56" height="14" rx="3"/>
+      <path d="M16 12 L22 4 L42 4 L48 12"/>
+      <circle cx="18" cy="26" r="5"/><circle cx="46" cy="26" r="5"/>
+      <circle cx="18" cy="26" r="2.5" fill="currentColor"/>
+      <circle cx="46" cy="26" r="2.5" fill="currentColor"/>
+    </svg>`;
   }
-  return `<svg viewBox="0 0 64 32" fill="none" stroke="currentColor" stroke-width="1.5">
-    <rect x="4" y="12" width="56" height="14" rx="3"/>
-    <path d="M16 12 L22 4 L42 4 L48 12"/>
-    <circle cx="18" cy="26" r="5"/><circle cx="46" cy="26" r="5"/>
-    <circle cx="18" cy="26" r="2.5" fill="currentColor"/>
-    <circle cx="46" cy="26" r="2.5" fill="currentColor"/>
-  </svg>`;
+  if (photos.length === 1) {
+    return `<img src="${photos[0]}" alt="${car.make} ${car.model}" class="car-photo" loading="lazy" />`;
+  }
+  // Multiple photos - mini slider
+  const id = 'sl_' + Math.random().toString(36).substr(2,6);
+  const imgs = photos.map((src, i) =>
+    `<img src="${src}" alt="${car.make} ${car.model}" class="car-photo slide-img ${i===0?'active':''}" data-idx="${i}" loading="lazy" />`
+  ).join('');
+  return `
+    <div class="photo-slider" id="${id}">
+      ${imgs}
+      ${photos.length > 1 ? `
+      <button class="slide-btn slide-prev" onclick="event.stopPropagation();slidePhoto('${id}',-1)">&#8249;</button>
+      <button class="slide-btn slide-next" onclick="event.stopPropagation();slidePhoto('${id}',1)">&#8250;</button>
+      <div class="slide-dots">${photos.map((_,i)=>`<span class="dot ${i===0?'active':''}" data-idx="${i}"></span>`).join('')}</div>
+      ` : ''}
+    </div>`;
+}
+
+function slidePhoto(sliderId, dir) {
+  const slider = document.getElementById(sliderId);
+  if (!slider) return;
+  const imgs = slider.querySelectorAll('.slide-img');
+  const dots = slider.querySelectorAll('.dot');
+  let cur = [...imgs].findIndex(i => i.classList.contains('active'));
+  imgs[cur].classList.remove('active');
+  if (dots[cur]) dots[cur].classList.remove('active');
+  cur = (cur + dir + imgs.length) % imgs.length;
+  imgs[cur].classList.add('active');
+  if (dots[cur]) dots[cur].classList.add('active');
 }
 
 function renderCars(cars) {
@@ -184,7 +217,7 @@ function renderCars(cars) {
     card.style.animationDelay = `${idx * 0.06}s`;
 
     card.innerHTML = `
-      <div class="car-img-placeholder ${car.photo ? 'has-photo' : ''}">
+      <div class="car-img-placeholder ${parsePhotos(car.photo).length > 0 ? 'has-photo' : ''}">
         ${getCarImageHTML(car)}
         ${getBadgeHTML(car.badge)}
       </div>
