@@ -181,6 +181,22 @@ function getCarImageHTML(car) {
 function slidePhoto(sliderId, dir) {
   const slider = document.getElementById(sliderId);
   if (!slider) return;
+  // Handle modal slider (uses opacity/z-index, not classes)
+  const modalImgs = slider.querySelectorAll('[data-modal-slide]');
+  if (modalImgs.length > 0) {
+    let cur = [...modalImgs].findIndex(i => i.style.opacity === '1');
+    if (cur < 0) cur = 0;
+    modalImgs[cur].style.opacity = '0';
+    modalImgs[cur].style.zIndex = '0';
+    cur = (cur + dir + modalImgs.length) % modalImgs.length;
+    modalImgs[cur].style.opacity = '1';
+    modalImgs[cur].style.zIndex = '1';
+    // Update dots
+    const dots = slider.querySelectorAll('.dot');
+    dots.forEach((d,i) => d.style.background = i===cur ? '#fff' : 'rgba(255,255,255,0.4)');
+    return;
+  }
+  // Handle card slider (uses classes)
   const imgs = slider.querySelectorAll('.slide-img');
   const dots = slider.querySelectorAll('.dot');
   let cur = [...imgs].findIndex(i => i.classList.contains('active'));
@@ -318,14 +334,14 @@ function openModal(car) {
   } else if (modalPhotos.length > 1) {
     const mid = 'modal_' + Math.random().toString(36).substr(2,6);
     const imgs = modalPhotos.map((src, i) =>
-      `<img src="${src}" alt="${car.make} ${car.model}" class="slide-img ${i===0?'active':''}" style="height:240px;object-fit:contain;background:#111;border-radius:10px;" loading="lazy" />`
+      `<img src="${src}" alt="${car.make} ${car.model}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#111;opacity:${i===0?'1':'0'};transition:opacity 0.3s ease;z-index:${i===0?'1':'0'};" data-modal-slide="${i}" loading="lazy" />`
     ).join('');
     photoHTML = `
-      <div class="photo-slider" id="${mid}" style="height:240px;border-radius:10px;margin-bottom:1.5rem;background:#111;">
+      <div class="photo-slider modal-slider" id="${mid}" style="position:relative;width:100%;height:240px;border-radius:10px;margin-bottom:1.5rem;background:#111;overflow:hidden;display:block;">
         ${imgs}
-        <button class="slide-btn slide-prev" onclick="slidePhoto('${mid}',-1)">&#8249;</button>
-        <button class="slide-btn slide-next" onclick="slidePhoto('${mid}',1)">&#8250;</button>
-        <div class="slide-dots">${modalPhotos.map((_,i)=>`<span class="dot ${i===0?'active':''}" data-idx="${i}"></span>`).join('')}</div>
+        <button class="slide-btn slide-prev" onclick="event.stopPropagation();slidePhoto('${mid}',-1)" style="position:absolute;top:50%;left:6px;transform:translateY(-50%);z-index:20;">&#8249;</button>
+        <button class="slide-btn slide-next" onclick="event.stopPropagation();slidePhoto('${mid}',1)" style="position:absolute;top:50%;right:6px;transform:translateY(-50%);z-index:20;">&#8250;</button>
+        <div class="slide-dots" style="position:absolute;bottom:6px;left:50%;transform:translateX(-50%);display:flex;gap:4px;z-index:20;">${modalPhotos.map((_,i)=>`<span class="dot ${i===0?'active':''}" style="width:6px;height:6px;border-radius:50%;background:${i===0?'#fff':'rgba(255,255,255,0.4)'};display:inline-block;"></span>`).join('')}</div>
       </div>`;
   }
 
