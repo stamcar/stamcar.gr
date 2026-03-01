@@ -14,7 +14,7 @@ const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tq
 const FORMSPREE_EMAIL = 'Stamcarinfo@gmail.com';
 // Για να δουλεύει το form: πήγαινε στο formspree.io, δημιούργησε δωρεάν λογαριασμό
 // και αντικατάστησε το παρακάτω με το form ID σου (π.χ. "xpwzgkqb")
-const FORMSPREE_ID = 'mzdaqzdo'; // ← βάλε εδώ το ID σου από formspree.io
+const FORMSPREE_ID = ''; // ← βάλε εδώ το ID σου από formspree.io
 
 /* ── BADGE COLORS ────────────────────────────────────────── */
 // Προσθέτουμε αυτόματα χρώμα για κάθε badge που γράφεις στο Sheet
@@ -323,15 +323,27 @@ function openModal(car) {
 
   modal.classList.remove('hidden');
   document.body.style.overflow = 'hidden';
+  document.body.dataset.scrollY = window.scrollY;
 }
 
 function initModal() {
   const modal    = document.getElementById('carModal');
   const closeBtn = document.getElementById('modalClose');
-  const close    = () => { modal.classList.add('hidden'); document.body.style.overflow = ''; };
+  const close = () => {
+    modal.classList.add('hidden');
+    document.body.style.overflow = '';
+    document.body.style.position = '';
+    document.body.style.top = '';
+  };
   closeBtn.addEventListener('click', close);
   modal.addEventListener('click', e => { if (e.target === modal) close(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  // Fix: contact link inside modal restores scroll
+  modal.addEventListener('click', e => {
+    if (e.target.tagName === 'A' && e.target.getAttribute('href') === '#contact') {
+      close();
+    }
+  });
 }
 
 /* ════════════════════════════════════════════════════════════
