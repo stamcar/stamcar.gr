@@ -311,12 +311,22 @@ function openModal(car) {
   const content = document.getElementById('modalContent');
   const features = Array.isArray(car.features) ? car.features : [];
 
+  const modalPhotos = parsePhotos(car.photo);
   let photoHTML = '';
-  if (car.photo) {
-    let src = car.photo;
-    const driveMatch = src.match(/\/file\/d\/([^/]+)/);
-    if (driveMatch) src = `https://drive.google.com/thumbnail?id=${driveMatch[1]}&sz=w800`;
-    photoHTML = `<img src="${src}" alt="${car.make} ${car.model}" style="width:100%;height:220px;object-fit:cover;border-radius:10px;margin-bottom:1.5rem;" loading="lazy" />`;
+  if (modalPhotos.length === 1) {
+    photoHTML = `<img src="${modalPhotos[0]}" alt="${car.make} ${car.model}" style="width:100%;height:240px;object-fit:contain;background:#111;border-radius:10px;margin-bottom:1.5rem;" loading="lazy" />`;
+  } else if (modalPhotos.length > 1) {
+    const mid = 'modal_' + Math.random().toString(36).substr(2,6);
+    const imgs = modalPhotos.map((src, i) =>
+      `<img src="${src}" alt="${car.make} ${car.model}" class="slide-img ${i===0?'active':''}" style="height:240px;object-fit:contain;background:#111;border-radius:10px;" loading="lazy" />`
+    ).join('');
+    photoHTML = `
+      <div class="photo-slider" id="${mid}" style="height:240px;border-radius:10px;margin-bottom:1.5rem;background:#111;">
+        ${imgs}
+        <button class="slide-btn slide-prev" onclick="slidePhoto('${mid}',-1)">&#8249;</button>
+        <button class="slide-btn slide-next" onclick="slidePhoto('${mid}',1)">&#8250;</button>
+        <div class="slide-dots">${modalPhotos.map((_,i)=>`<span class="dot ${i===0?'active':''}" data-idx="${i}"></span>`).join('')}</div>
+      </div>`;
   }
 
   content.innerHTML = `
