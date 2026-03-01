@@ -1,523 +1,401 @@
-/* ═══════════════════════════════════════════════════════════
-   STAMCAR — app.js v3
-   Google Sheets data source
-   Features: photos, custom badges, all makes, Formspree
-   ═══════════════════════════════════════════════════════════ */
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>STAMCAR | Αγορά – Εύρεση – Πώληση Αυτοκινήτων</title>
+  <meta name="description" content="STAMCAR - Premium αγορά, εύρεση και πώληση αυτοκινήτων." />
+  <meta property="og:title" content="STAMCAR | Premium Automotive" />
+  <meta property="og:description" content="Αγορά – Εύρεση – Πώληση Αυτοκινήτων" />
+  <meta property="og:type" content="website" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
 
-'use strict';
-
-/* ── GOOGLE SHEETS CONFIG ────────────────────────────────── */
-const SHEET_ID  = '1SGtbhM-LnqbeR4t3P_iV2cA8ip8gvroM9lbUF5ZhXTg';
-const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
-
-/* ── FORMSPREE ───────────────────────────────────────────── */
-const FORMSPREE_EMAIL = 'Stamcarinfo@gmail.com';
-// Για να δουλεύει το form: πήγαινε στο formspree.io, δημιούργησε δωρεάν λογαριασμό
-// και αντικατάστησε το παρακάτω με το form ID σου (π.χ. "xpwzgkqb")
-const FORMSPREE_ID = ''; // ← βάλε εδώ το ID σου από formspree.io
-
-/* ── BADGE COLORS ────────────────────────────────────────── */
-// Προσθέτουμε αυτόματα χρώμα για κάθε badge που γράφεις στο Sheet
-const BADGE_STYLES = {
-  'hot':    { bg: 'rgba(177,18,26,0.85)',   color: '#fff', label: 'HOT' },
-  'new':    { bg: 'rgba(34,197,94,0.85)',   color: '#fff', label: 'ΝΕΟ' },
-  'cheap':  { bg: 'rgba(251,191,36,0.85)',  color: '#000', label: 'ΦΘΗΝΟ' },
-  'sale':   { bg: 'rgba(249,115,22,0.85)',  color: '#fff', label: 'SALE' },
-  'top':    { bg: 'rgba(139,92,246,0.85)',  color: '#fff', label: 'TOP' },
-  'offer':  { bg: 'rgba(20,184,166,0.85)',  color: '#fff', label: 'ΠΡΟΣΦΟΡΑ' },
-};
-
-/* ── AI Valuation — ALL makes ────────────────────────────── */
-const BASE_PRICES = {
-  'Alfa Romeo':48000, 'Audi':44000, 'BMW':46000, 'Chevrolet':28000,
-  'Chrysler':30000, 'Citroen':22000, 'Dacia':16000, 'Fiat':20000,
-  'Ford':26000, 'Honda':24000, 'Hyundai':24000, 'Jaguar':52000,
-  'Jeep':38000, 'Kia':23000, 'Land Rover':58000, 'Lexus':46000,
-  'Mazda':26000, 'Mercedes-Benz':50000, 'Mini':32000, 'Mitsubishi':22000,
-  'Nissan':22000, 'Opel':20000, 'Peugeot':22000, 'Porsche':80000,
-  'Renault':21000, 'Seat':24000, 'Skoda':26000, 'Subaru':28000,
-  'Suzuki':18000, 'Tesla':55000, 'Toyota':28000, 'Volkswagen':30000,
-  'Volvo':42000,
-};
-const FUEL_FACTORS      = { petrol:1.0, diesel:1.05, hybrid:1.12, electric:1.2, lpg:0.85 };
-const CONDITION_FACTORS = { excellent:1.0, good:0.88, fair:0.74, poor:0.58 };
-const CONDITION_GR      = { excellent:'Άριστη', good:'Καλή', fair:'Μέτρια', poor:'Κακή' };
-const FUEL_GR           = { petrol:'Βενζίνη', diesel:'Diesel', hybrid:'Υβριδικό', electric:'Ηλεκτρικό', lpg:'LPG/CNG' };
-
-/* ── Global ──────────────────────────────────────────────── */
-let ALL_CARS = [];
-
-/* ════════════════════════════════════════════════════════════
-   INIT
-   ════════════════════════════════════════════════════════════ */
-document.addEventListener('DOMContentLoaded', () => {
-  initNavbar();
-  initCounters();
-  initReveal();
-  initValuation();
-  initContact();
-  initModal();
-  initCursorGlow();
-  loadCars();
-});
-
-/* ════════════════════════════════════════════════════════════
-   LOAD FROM GOOGLE SHEETS
-   ════════════════════════════════════════════════════════════ */
-async function loadCars() {
-  showLoading(true);
-  try {
-    const res  = await fetch(SHEET_URL);
-    const text = await res.text();
-    // Strip the JSONP wrapper
-    const jsonStr = text.replace(/^[^(]+\(/, '').replace(/\);?\s*$/, '');
-    const json = JSON.parse(jsonStr);
-    const rows = json.table.rows;
-    // Normalize column names: lowercase + trim all whitespace
-    const cols = json.table.cols.map(c => c.label.toLowerCase().replace(/\s+/g, ''));
-
-    ALL_CARS = rows
-      .map(row => {
-        const car = {};
-        cols.forEach((col, i) => {
-          const cell = row.c[i];
-          car[col] = cell ? (cell.v !== null && cell.v !== undefined ? String(cell.v).trim() : '') : '';
-        });
-        // Support both "photo" and "photos" column names
-        car.photo = (car.photo || car.photos || '').trim();
-        // Features: comma or pipe separated → array
-        const featStr = car.features || car.feature || '';
-        car.features = featStr ? featStr.split(/[,|]/).map(f => f.trim()).filter(Boolean) : [];
-        // Numbers
-        car.year  = parseInt(car.year)  || 0;
-        car.km    = parseInt(car.km)    || 0;
-        car.hp    = parseInt(car.hp)    || 0;
-        car.price = parseInt(car.price) || 0;
-        // Badge: lowercase trim
-        car.badge = (car.badge || '').toLowerCase().trim();
-        return car;
-      })
-      .filter(car => car.make && car.model && car.price > 0);
-    
-    console.log('✅ Loaded', ALL_CARS.length, 'cars from Google Sheets');
-
-    renderCars(ALL_CARS);
-  } catch (err) {
-    console.error('Sheets error:', err);
-    showError();
-  } finally {
-    showLoading(false);
-  }
-}
-
-function showLoading(show) {
-  document.getElementById('carsLoading').classList.toggle('hidden', !show);
-  if (show) {
-    document.getElementById('carsGrid').classList.add('hidden');
-    document.getElementById('resultsInfo').classList.add('hidden');
-    document.getElementById('noResults').classList.add('hidden');
-  }
-}
-
-function showError() {
-  document.getElementById('carsLoading').classList.add('hidden');
-  const el = document.getElementById('noResults');
-  el.classList.remove('hidden');
-  el.querySelector('p').textContent = '❌ Σφάλμα φόρτωσης. Ανανεώστε τη σελίδα.';
-}
-
-/* ════════════════════════════════════════════════════════════
-   RENDER CARS
-   ════════════════════════════════════════════════════════════ */
-function getBadgeHTML(badge) {
-  if (!badge) return '';
-  const style = BADGE_STYLES[badge];
-  if (style) {
-    return `<span class="car-badge" style="background:${style.bg};color:${style.color};">${style.label}</span>`;
-  }
-  // Unknown badge → show as-is with default style
-  return `<span class="car-badge" style="background:rgba(100,100,100,0.85);color:#fff;">${badge.toUpperCase()}</span>`;
-}
-
-function getCarImageHTML(car) {
-  if (car.photo) {
-    // Convert Google Drive share link to direct image link if needed
-    let src = car.photo;
-    const driveMatch = src.match(/\/file\/d\/([^/]+)/);
-    if (driveMatch) {
-      src = `https://drive.google.com/thumbnail?id=${driveMatch[1]}&sz=w600`;
-    }
-    return `<img src="${src}" alt="${car.make} ${car.model}" class="car-photo" onerror="this.parentElement.innerHTML=getCarSVG()" loading="lazy" />`;
-  }
-  return `<svg viewBox="0 0 64 32" fill="none" stroke="currentColor" stroke-width="1.5">
-    <rect x="4" y="12" width="56" height="14" rx="3"/>
-    <path d="M16 12 L22 4 L42 4 L48 12"/>
-    <circle cx="18" cy="26" r="5"/><circle cx="46" cy="26" r="5"/>
-    <circle cx="18" cy="26" r="2.5" fill="currentColor"/>
-    <circle cx="46" cy="26" r="2.5" fill="currentColor"/>
-  </svg>`;
-}
-
-function renderCars(cars) {
-  const grid    = document.getElementById('carsGrid');
-  const noRes   = document.getElementById('noResults');
-  const resInfo = document.getElementById('resultsInfo');
-  const countEl = document.getElementById('resultsCount');
-
-  resInfo.classList.remove('hidden');
-  countEl.textContent = cars.length;
-
-  if (!cars.length) {
-    grid.classList.add('hidden');
-    noRes.classList.remove('hidden');
-    noRes.querySelector('p').textContent = 'Δεν βρέθηκαν αυτοκίνητα με αυτά τα κριτήρια.';
-    return;
-  }
-
-  noRes.classList.add('hidden');
-  grid.classList.remove('hidden');
-  grid.innerHTML = '';
-
-  cars.forEach((car, idx) => {
-    const card = document.createElement('div');
-    card.className = 'car-card';
-    card.style.animationDelay = `${idx * 0.06}s`;
-
-    card.innerHTML = `
-      <div class="car-img-placeholder ${car.photo ? 'has-photo' : ''}">
-        ${getCarImageHTML(car)}
-        ${getBadgeHTML(car.badge)}
-      </div>
-      <div class="car-info">
-        <p class="car-make">${car.make}</p>
-        <p class="car-name">${car.model}</p>
-        <div class="car-specs">
-          <span class="car-spec">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            ${car.year}
-          </span>
-          <span class="car-spec">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-            ${Number(car.km).toLocaleString('el-GR')} km
-          </span>
-          <span class="car-spec">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 22h18M3 6h18M6 6V3M18 6V3M6 22v-3M18 22v-3M3 14h18"/></svg>
-            ${car.fuel}
-          </span>
-          <span class="car-spec">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
-            ${car.hp} hp
-          </span>
-          <span class="car-spec">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 8v4l3 3"/></svg>
-            ${car.gearbox}
-          </span>
-          <span class="car-spec">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-            ${car.condition}
-          </span>
-        </div>
-        <div class="car-price-row">
-          <p class="car-price">${Number(car.price).toLocaleString('el-GR')} €</p>
-          <button class="car-details-btn" data-idx="${idx}">Λεπτομέρειες</button>
-        </div>
-      </div>
-    `;
-
-    card.querySelector('.car-details-btn').addEventListener('click', e => { e.stopPropagation(); openModal(car); });
-    card.addEventListener('click', () => openModal(car));
-    grid.appendChild(card);
-  });
-}
-
-/* ════════════════════════════════════════════════════════════
-   FILTERS
-   ════════════════════════════════════════════════════════════ */
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('applyFilters').addEventListener('click', applyFilters);
-  document.getElementById('resetFilters').addEventListener('click', resetFilters);
-  document.getElementById('resetFilters2').addEventListener('click', resetFilters);
-  document.getElementById('filterModel').addEventListener('input', debounce(applyFilters, 350));
-});
-
-function applyFilters() {
-  const make    = document.getElementById('filterMake').value;
-  const model   = document.getElementById('filterModel').value.toLowerCase().trim();
-  const year    = parseInt(document.getElementById('filterYear').value) || 0;
-  const fuel    = document.getElementById('filterFuel').value;
-  const gearbox = document.getElementById('filterGearbox').value;
-  const maxKm   = parseInt(document.getElementById('filterKm').value) || Infinity;
-
-  const filtered = ALL_CARS.filter(car => {
-    if (make    && car.make    !== make)    return false;
-    if (model   && !car.model.toLowerCase().includes(model)) return false;
-    if (year    && car.year    <  year)     return false;
-    if (fuel    && car.fuel    !== fuel)    return false;
-    if (gearbox && car.gearbox !== gearbox) return false;
-    if (car.km  > maxKm)                   return false;
-    return true;
-  });
-  renderCars(filtered);
-}
-
-function resetFilters() {
-  ['filterMake','filterYear','filterFuel','filterGearbox','filterKm'].forEach(id => {
-    document.getElementById(id).value = '';
-  });
-  document.getElementById('filterModel').value = '';
-  renderCars(ALL_CARS);
-}
-
-function debounce(fn, d) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), d); }; }
-
-/* ════════════════════════════════════════════════════════════
-   MODAL
-   ════════════════════════════════════════════════════════════ */
-function openModal(car) {
-  const modal   = document.getElementById('carModal');
-  const content = document.getElementById('modalContent');
-  const features = Array.isArray(car.features) ? car.features : [];
-
-  let photoHTML = '';
-  if (car.photo) {
-    let src = car.photo;
-    const driveMatch = src.match(/\/file\/d\/([^/]+)/);
-    if (driveMatch) src = `https://drive.google.com/thumbnail?id=${driveMatch[1]}&sz=w800`;
-    photoHTML = `<img src="${src}" alt="${car.make} ${car.model}" style="width:100%;height:220px;object-fit:cover;border-radius:10px;margin-bottom:1.5rem;" loading="lazy" />`;
-  }
-
-  content.innerHTML = `
-    ${photoHTML}
-    <div style="margin-bottom:1.5rem;">
-      <p style="font-family:'Orbitron',sans-serif;font-size:.65rem;letter-spacing:.2em;color:#B1121A;text-transform:uppercase;margin-bottom:.4rem;">${car.make}</p>
-      <h2 style="font-size:1.4rem;color:#fff;margin-bottom:.5rem;font-family:'Orbitron',sans-serif;">${car.model}</h2>
-      <p style="font-family:'Orbitron',sans-serif;font-size:1.9rem;font-weight:900;background:linear-gradient(135deg,#fff,#c8c8c8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">${Number(car.price).toLocaleString('el-GR')} €</p>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.5rem;">
-      ${[
-        ['Χρονολογία', car.year],
-        ['Χιλιόμετρα', Number(car.km).toLocaleString('el-GR') + ' km'],
-        ['Καύσιμο',    car.fuel],
-        ['Κιβώτιο',    car.gearbox],
-        ['Ιπποδύναμη', (car.hp || '—') + (car.hp ? ' hp' : '')],
-        ['Κατάσταση',  car.condition],
-      ].map(([l,v]) => `
-        <div style="background:#1C1C1C;border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:.75rem 1rem;">
-          <p style="font-family:'Orbitron',sans-serif;font-size:.58rem;letter-spacing:.15em;color:#666;text-transform:uppercase;margin-bottom:.2rem;">${l}</p>
-          <p style="font-weight:600;color:#fff;font-size:.9rem;">${v}</p>
-        </div>
-      `).join('')}
-    </div>
-    ${features.length ? `
-    <div style="margin-bottom:1.5rem;">
-      <p style="font-family:'Orbitron',sans-serif;font-size:.65rem;letter-spacing:.2em;color:#666;text-transform:uppercase;margin-bottom:.75rem;">Εξοπλισμός</p>
-      <ul style="list-style:none;display:flex;flex-direction:column;gap:.4rem;">
-        ${features.map(f => `<li style="display:flex;align-items:center;gap:.5rem;font-size:.875rem;color:#D9D9D9;"><span style="color:#B1121A;font-weight:700;">→</span>${f}</li>`).join('')}
+  <nav class="navbar" id="navbar">
+    <div class="nav-inner">
+      <a href="#hero" class="nav-logo">
+        <span class="logo-text">STAMCAR</span>
+        <span class="logo-line"></span>
+      </a>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="#services">Υπηρεσίες</a></li>
+        <li><a href="#search">Αναζήτηση</a></li>
+        <li><a href="#valuation">Κοστολόγηση</a></li>
+        <li><a href="#contact">Επικοινωνία</a></li>
       </ul>
-    </div>` : ''}
-    <div style="display:flex;gap:1rem;flex-wrap:wrap;">
-      <a href="tel:6988091918" class="btn btn-primary" style="flex:1;min-width:140px;justify-content:center;">📞 6988091918</a>
-      <a href="#contact" class="btn btn-outline" style="flex:1;min-width:140px;justify-content:center;" onclick="document.getElementById('carModal').classList.add('hidden')">Αποστολή Μηνύματος</a>
+      <a href="tel:6988091918" class="nav-cta">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/></svg>
+        6988091918
+      </a>
+      <button class="nav-hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
     </div>
-  `;
+  </nav>
 
-  modal.classList.remove('hidden');
-  document.body.style.overflow = 'hidden';
-}
+  <section class="hero" id="hero">
+    <div class="hero-bg">
+      <div class="hero-overlay"></div>
+      <div class="hero-carbon"></div>
+    </div>
+    <div class="red-line red-line-top"></div>
+    <div class="red-line red-line-bottom"></div>
+    <div class="hero-content reveal">
+      <p class="hero-eyebrow">PREMIUM AUTOMOTIVE</p>
+      <h1 class="hero-title"><span class="logo-silver" style="display:block;width:100%;white-space:nowrap;overflow:hidden;text-overflow:clip;">STAMCAR</span></h1>
+      <p class="hero-subtitle">Αγορά &ndash; Εύρεση &ndash; Πώληση Αυτοκινήτων</p>
+      <div class="hero-divider"></div>
+      <div class="hero-btns">
+        <a href="#search" class="btn btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          Αναζήτηση Αυτοκινήτου
+        </a>
+        <a href="#valuation" class="btn btn-outline">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          Πούλησε το Αυτοκίνητό σου
+        </a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><span class="stat-num" data-target="500">0</span><span class="stat-plus">+</span><span class="stat-label">Οχήματα</span></div>
+        <div class="stat-divider"></div>
+        <div class="stat"><span class="stat-num" data-target="12">0</span><span class="stat-plus">+</span><span class="stat-label">Χρόνια Εμπειρίας</span></div>
+        <div class="stat-divider"></div>
+        <div class="stat"><span class="stat-num" data-target="98">0</span><span class="stat-plus">%</span><span class="stat-label">Ικανοποίηση</span></div>
+      </div>
+    </div>
+    <div class="hero-scroll-indicator"><span>SCROLL</span><div class="scroll-line"></div></div>
+  </section>
 
-function initModal() {
-  const modal    = document.getElementById('carModal');
-  const closeBtn = document.getElementById('modalClose');
-  const close    = () => { modal.classList.add('hidden'); document.body.style.overflow = ''; };
-  closeBtn.addEventListener('click', close);
-  modal.addEventListener('click', e => { if (e.target === modal) close(); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
-}
+  <section class="services" id="services">
+    <div class="container">
+      <div class="section-header reveal">
+        <p class="section-eyebrow">ΤΙ ΚΑΝΟΥΜΕ</p>
+        <h2 class="section-title">Premium <span class="accent">Υπηρεσίες</span></h2>
+        <div class="title-line"></div>
+      </div>
+      <div class="services-grid">
+        <div class="service-card reveal" style="--delay:.1s">
+          <div class="card-accent-line"></div>
+          <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/><path d="M11 8v6M8 11h6"/></svg></div>
+          <h3>Εύρεση Αυτοκινήτου</h3>
+          <p>Κατόπιν παραγγελίας βρίσκουμε ακριβώς το αυτοκίνητο που ψάχνετε — με τις προδιαγραφές, το χρώμα και τον προϋπολογισμό σας.</p>
+          <div class="card-arrow">→</div>
+        </div>
+        <div class="service-card reveal" style="--delay:.2s">
+          <div class="card-accent-line"></div>
+          <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12H3l9-9 9 9h-2"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></div>
+          <h3>Αγορά Αυτοκινήτου</h3>
+          <p>Διαθέτουμε επιλεγμένα οχήματα σε άριστη κατάσταση. Πλήρης διαφάνεια ιστορικού, τεχνικός έλεγχος και εγγύηση.</p>
+          <div class="card-arrow">→</div>
+        </div>
+        <div class="service-card reveal" style="--delay:.3s">
+          <div class="card-accent-line"></div>
+          <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+          <h3>Πώληση Αυτοκινήτου</h3>
+          <p>Αναλαμβάνουμε την πώληση του οχήματός σας στην καλύτερη τιμή της αγοράς. Γρήγορα, αξιόπιστα, χωρίς ταλαιπωρία.</p>
+          <div class="card-arrow">→</div>
+        </div>
+        <div class="service-card reveal" style="--delay:.4s">
+          <div class="card-accent-line"></div>
+          <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg></div>
+          <h3>Εκτίμηση Αξίας</h3>
+          <p>Έξυπνη AI-based εκτίμηση αξίας οχήματος βασισμένη σε πραγματικά δεδομένα αγοράς. Άμεσο αποτέλεσμα, μηδενικό κόστος.</p>
+          <div class="card-arrow">→</div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-/* ════════════════════════════════════════════════════════════
-   NAVBAR
-   ════════════════════════════════════════════════════════════ */
-function initNavbar() {
-  const navbar    = document.getElementById('navbar');
-  const hamburger = document.getElementById('hamburger');
-  const navLinks  = document.getElementById('navLinks');
-  window.addEventListener('scroll', () => {
-    navbar.classList.toggle('scrolled', window.scrollY > 60);
-  }, { passive: true });
-  hamburger.addEventListener('click', () => {
-    hamburger.classList.toggle('active');
-    navLinks.classList.toggle('open');
-  });
-  navLinks.querySelectorAll('a').forEach(link => {
-    link.addEventListener('click', () => {
-      hamburger.classList.remove('active');
-      navLinks.classList.remove('open');
-    });
-  });
-}
+  <section class="car-search" id="search">
+    <div class="container">
+      <div class="section-header reveal">
+        <p class="section-eyebrow">ΒΡΕΣ ΤΟ ΑΥΤΟΚΙΝΗΤΟ ΣΟΥ</p>
+        <h2 class="section-title">Αναζήτηση <span class="accent">Οχήματος</span></h2>
+        <div class="title-line"></div>
+      </div>
+      <div class="search-filters reveal">
+        <div class="filter-row">
+          <div class="filter-group">
+            <label>Μάρκα</label>
+            <select id="filterMake">
+              <option value="">Όλες</option>
+              <option>Alfa Romeo</option><option>Audi</option><option>BMW</option>
+              <option>Chevrolet</option><option>Citroen</option><option>Dacia</option>
+              <option>Fiat</option><option>Ford</option><option>Honda</option>
+              <option>Hyundai</option><option>Jaguar</option><option>Jeep</option>
+              <option>Kia</option><option>Land Rover</option><option>Lexus</option>
+              <option>Mazda</option><option>Mercedes-Benz</option><option>Mini</option>
+              <option>Mitsubishi</option><option>Nissan</option><option>Opel</option>
+              <option>Peugeot</option><option>Porsche</option><option>Renault</option>
+              <option>Seat</option><option>Skoda</option><option>Subaru</option>
+              <option>Suzuki</option><option>Tesla</option><option>Toyota</option>
+              <option>Volkswagen</option><option>Volvo</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Μοντέλο</label>
+            <input type="text" id="filterModel" placeholder="π.χ. Golf, Series 3..." />
+          </div>
+          <div class="filter-group">
+            <label>Από Έτος</label>
+            <select id="filterYear">
+              <option value="">Όλα</option>
+              <option>2026</option>
+              <option>2025</option>
+              <option>2024</option>
+              <option>2023</option>
+              <option>2022</option>
+              <option>2021</option>
+              <option>2020</option>
+              <option>2019</option>
+              <option>2018</option>
+              <option>2017</option>
+              <option>2016</option>
+              <option>2015</option>
+              <option>2014</option>
+              <option>2013</option>
+              <option>2012</option>
+              <option>2011</option>
+              <option>2010</option>
+              <option>2009</option>
+              <option>2008</option>
+              <option>2007</option>
+              <option>2006</option>
+              <option>2005</option>
+              <option>2004</option>
+              <option>2003</option>
+              <option>2002</option>
+              <option>2001</option>
+              <option>2000</option>
+              <option>1999</option>
+              <option>1998</option>
+              <option>1997</option>
+              <option>1996</option>
+              <option>1995</option>
+              <option>1994</option>
+              <option>1993</option>
+              <option>1992</option>
+              <option>1991</option>
+              <option>1990</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Καύσιμο</label>
+            <select id="filterFuel">
+              <option value="">Όλα</option>
+              <option>Βενζίνη</option><option>Diesel</option><option>Υβριδικό</option><option>Ηλεκτρικό</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Κιβώτιο</label>
+            <select id="filterGearbox">
+              <option value="">Όλα</option><option>Αυτόματο</option><option>Χειροκίνητο</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Max Km</label>
+            <select id="filterKm">
+              <option value="">Όλα</option>
+              <option value="50000">50.000 km</option>
+              <option value="100000">100.000 km</option>
+              <option value="150000">150.000 km</option>
+              <option value="200000">200.000 km</option>
+            </select>
+          </div>
+        </div>
+        <div class="filter-actions">
+          <button class="btn btn-primary" id="applyFilters">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            Αναζήτηση
+          </button>
+          <button class="btn btn-ghost" id="resetFilters">Επαναφορά</button>
+        </div>
+      </div>
 
-/* ════════════════════════════════════════════════════════════
-   COUNTERS
-   ════════════════════════════════════════════════════════════ */
-function initCounters() {
-  let started = false;
-  const obs = new IntersectionObserver(([e]) => {
-    if (!e.isIntersecting || started) return;
-    started = true;
-    document.querySelectorAll('.stat-num').forEach(el => {
-      const target = parseInt(el.dataset.target, 10);
-      let cur = 0;
-      const step = target / (1800 / 16);
-      const t = setInterval(() => {
-        cur = Math.min(cur + step, target);
-        el.textContent = Math.round(cur);
-        if (cur >= target) clearInterval(t);
-      }, 16);
-    });
-  }, { threshold: 0.5 });
-  const hero = document.getElementById('hero');
-  if (hero) obs.observe(hero);
-}
+      <div class="cars-loading" id="carsLoading">
+        <div class="loading-spinner"></div>
+        <p>Φόρτωση αυτοκινήτων...</p>
+      </div>
+      <div class="results-info hidden" id="resultsInfo">
+        <span id="resultsCount">0</span> αποτελέσματα βρέθηκαν
+      </div>
+      <div class="cars-grid hidden" id="carsGrid"></div>
+      <div class="no-results hidden" id="noResults">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#B1121A" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <p>Δεν βρέθηκαν αυτοκίνητα με αυτά τα κριτήρια.</p>
+        <button class="btn btn-outline" id="resetFilters2">Εμφάνιση όλων</button>
+      </div>
+    </div>
+  </section>
 
-/* ════════════════════════════════════════════════════════════
-   SCROLL REVEAL
-   ════════════════════════════════════════════════════════════ */
-function initReveal() {
-  const obs = new IntersectionObserver(entries => {
-    entries.forEach(e => {
-      if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); }
-    });
-  }, { threshold: 0.12 });
-  document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
-}
+  <section class="valuation" id="valuation">
+    <div class="container">
+      <div class="section-header reveal">
+        <p class="section-eyebrow">ΕΞΥΠΝΗ ΕΚΤΙΜΗΣΗ</p>
+        <h2 class="section-title">AI <span class="accent">Κοστολόγηση</span></h2>
+        <div class="title-line"></div>
+        <p class="section-desc">Λάβετε εκτίμηση αξίας για το όχημά σας σε δευτερόλεπτα — δωρεάν.</p>
+      </div>
+      <div class="valuation-wrapper">
+        <div class="valuation-form reveal">
+          <div class="form-grid">
+            <div class="form-group"><label>Μάρκα *</label>
+              <select id="valMake">
+                <option value="">Επιλέξτε μάρκα</option>
+                <option value="Alfa Romeo">Alfa Romeo</option>
+                <option value="Audi">Audi</option>
+                <option value="BMW">BMW</option>
+                <option value="Chevrolet">Chevrolet</option>
+                <option value="Chrysler">Chrysler</option>
+                <option value="Citroen">Citroen</option>
+                <option value="Dacia">Dacia</option>
+                <option value="Fiat">Fiat</option>
+                <option value="Ford">Ford</option>
+                <option value="Honda">Honda</option>
+                <option value="Hyundai">Hyundai</option>
+                <option value="Jaguar">Jaguar</option>
+                <option value="Jeep">Jeep</option>
+                <option value="Kia">Kia</option>
+                <option value="Land Rover">Land Rover</option>
+                <option value="Lexus">Lexus</option>
+                <option value="Mazda">Mazda</option>
+                <option value="Mercedes-Benz">Mercedes-Benz</option>
+                <option value="Mini">Mini</option>
+                <option value="Mitsubishi">Mitsubishi</option>
+                <option value="Nissan">Nissan</option>
+                <option value="Opel">Opel</option>
+                <option value="Peugeot">Peugeot</option>
+                <option value="Porsche">Porsche</option>
+                <option value="Renault">Renault</option>
+                <option value="Seat">Seat</option>
+                <option value="Skoda">Skoda</option>
+                <option value="Subaru">Subaru</option>
+                <option value="Suzuki">Suzuki</option>
+                <option value="Tesla">Tesla</option>
+                <option value="Toyota">Toyota</option>
+                <option value="Volkswagen">Volkswagen</option>
+                <option value="Volvo">Volvo</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Μοντέλο *</label><input type="text" id="valModel" placeholder="π.χ. 320d, Golf..." /></div>
+            <div class="form-group"><label>Έτος *</label><select id="valYear"><option value="">Επιλέξτε</option></select></div>
+            <div class="form-group"><label>Χιλιόμετρα *</label><input type="number" id="valKm" placeholder="π.χ. 85000" /></div>
+            <div class="form-group"><label>Καύσιμο *</label>
+              <select id="valFuel">
+                <option value="">Επιλέξτε</option><option value="petrol">Βενζίνη</option>
+                <option value="diesel">Diesel</option><option value="hybrid">Υβριδικό</option>
+                <option value="electric">Ηλεκτρικό</option><option value="lpg">LPG/CNG</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Κατάσταση *</label>
+              <select id="valCondition">
+                <option value="">Επιλέξτε</option><option value="excellent">Άριστη</option>
+                <option value="good">Καλή</option><option value="fair">Μέτρια</option><option value="poor">Κακή</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-full" id="estimateBtn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+            Εκτίμηση Αξίας
+          </button>
+        </div>
+        <div class="valuation-result hidden" id="valResult">
+          <div class="result-header">
+            <div class="result-ai-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>AI Ανάλυση</div>
+            <p class="result-vehicle-name" id="resultVehicleName"></p>
+          </div>
+          <div class="result-main">
+            <p class="result-label">Εκτιμώμενη Αξία</p>
+            <p class="result-price" id="resultPrice"></p>
+            <p class="result-range" id="resultRange"></p>
+          </div>
+          <div class="result-confidence">
+            <div class="confidence-row"><span>Confidence Score</span><span id="confidenceVal"></span></div>
+            <div class="confidence-bar-wrap"><div class="confidence-bar" id="confidenceBar"></div></div>
+          </div>
+          <div class="result-factors" id="resultFactors"></div>
+          <p class="result-disclaimer">⚠️ Η εκτίμηση είναι ενδεικτική και δεν αποτελεί δεσμευτική προσφορά.</p>
+          <a href="#contact" class="btn btn-primary btn-full" style="margin-top:1.5rem">Επικοινωνία για Αποτίμηση</a>
+        </div>
+        <div class="valuation-loading hidden" id="valLoading">
+          <div class="ai-loader">
+            <div class="loader-ring"></div><div class="loader-ring loader-ring-2"></div><div class="loader-ring loader-ring-3"></div>
+          </div>
+          <p class="loading-text">Ανάλυση δεδομένων αγοράς<span class="dots"></span></p>
+          <div class="loading-steps">
+            <div class="loading-step" id="step1">✓ Ανάλυση μάρκας & μοντέλου</div>
+            <div class="loading-step" id="step2">✓ Εφαρμογή υποτίμησης</div>
+            <div class="loading-step" id="step3">✓ Αξιολόγηση κατάστασης</div>
+            <div class="loading-step" id="step4">✓ Σύγκριση αγοράς</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-/* ════════════════════════════════════════════════════════════
-   AI VALUATION
-   ════════════════════════════════════════════════════════════ */
-function initValuation() {
-  const yearSel = document.getElementById('valYear');
-  for (let i = new Date().getFullYear(); i >= 1990; i--) {
-    const o = document.createElement('option');
-    o.value = i; o.textContent = i;
-    yearSel.appendChild(o);
-  }
-  document.getElementById('estimateBtn').addEventListener('click', runEstimation);
-}
+  <section class="contact" id="contact">
+    <div class="container">
+      <div class="section-header reveal">
+        <p class="section-eyebrow">ΕΠΙΚΟΙΝΩΝΙΑ</p>
+        <h2 class="section-title">Μιλήστε <span class="accent">Μαζί μας</span></h2>
+        <div class="title-line"></div>
+      </div>
+      <div class="contact-wrapper">
+        <div class="contact-info reveal">
+          <h3>STAMCAR</h3>
+          <p class="contact-tagline">Αγορά – Εύρεση – Πώληση Αυτοκινήτων</p>
+          <div class="contact-items">
+            <a href="tel:6988091918" class="contact-item">
+              <div class="contact-icon"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/></svg></div>
+              <div class="contact-text"><span class="contact-label">Τηλέφωνο</span><span class="contact-value">6988091918</span></div>
+            </a>
+            <a href="mailto:Stamcarinfo@gmail.com" class="contact-item">
+              <div class="contact-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+              <div class="contact-text"><span class="contact-label">Email</span><span class="contact-value">Stamcarinfo@gmail.com</span></div>
+            </a>
+            <a href="https://www.stamcar.gr" target="_blank" class="contact-item">
+              <div class="contact-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
+              <div class="contact-text"><span class="contact-label">Website</span><span class="contact-value">www.stamcar.gr</span></div>
+            </a>
+          </div>
+        </div>
+        <div class="contact-form-wrap reveal">
+          <form class="contact-form" id="contactForm" action="https://formspree.io/f/Stamcarinfo@gmail.com" method="POST" novalidate>
+            <div class="form-group"><label>Ονοματεπώνυμο *</label><input type="text" id="cName" placeholder="Το όνομά σας" required /></div>
+            <div class="form-group"><label>Email *</label><input type="email" id="cEmail" placeholder="email@example.com" required /></div>
+            <div class="form-group"><label>Τηλέφωνο</label><input type="tel" id="cPhone" placeholder="69xxxxxxxx" /></div>
+            <div class="form-group"><label>Μήνυμα *</label><textarea id="cMsg" rows="5" placeholder="Πώς μπορούμε να σας βοηθήσουμε;" required></textarea></div>
+            <button type="submit" class="btn btn-primary btn-full">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              Αποστολή Μηνύματος
+            </button>
+            <div class="form-success hidden" id="formSuccess">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              Το μήνυμά σας εστάλη! Θα επικοινωνήσουμε σύντομα.
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
 
-function runEstimation() {
-  const make      = document.getElementById('valMake').value;
-  const model     = document.getElementById('valModel').value.trim();
-  const year      = parseInt(document.getElementById('valYear').value);
-  const km        = parseInt(document.getElementById('valKm').value);
-  const fuel      = document.getElementById('valFuel').value;
-  const condition = document.getElementById('valCondition').value;
-  if (!make || !model || !year || isNaN(km) || !fuel || !condition) {
-    alert('⚠️ Συμπληρώστε όλα τα υποχρεωτικά πεδία.');
-    return;
-  }
-  document.getElementById('valResult').classList.add('hidden');
-  document.getElementById('valLoading').classList.remove('hidden');
-  ['step1','step2','step3','step4'].forEach((id, i) => {
-    document.getElementById(id).classList.remove('active');
-    setTimeout(() => document.getElementById(id).classList.add('active'), i * 500 + 100);
-  });
-  setTimeout(() => {
-    const result = calcValue({ make, year, km, fuel, condition });
-    displayResult(result, { make, model, year, km, fuel, condition });
-  }, 2400);
-}
+  <footer class="footer">
+    <div class="footer-line"></div>
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <span class="logo-silver footer-logo">STAMCAR</span>
+        <p>Αγορά – Εύρεση – Πώληση Αυτοκινήτων</p>
+      </div>
+      <div class="footer-links">
+        <a href="#services">Υπηρεσίες</a><a href="#search">Αναζήτηση</a>
+        <a href="#valuation">Κοστολόγηση</a><a href="#contact">Επικοινωνία</a>
+      </div>
+      <div class="footer-copy"><p>© 2025 STAMCAR. Όλα τα δικαιώματα διατηρούνται.</p></div>
+    </div>
+  </footer>
 
-function calcValue({ make, year, km, fuel, condition }) {
-  const base = BASE_PRICES[make] || 24000;
-  const age  = new Date().getFullYear() - year;
-  let price  = base;
-  if (age > 0) { price *= 0.88; for (let i = 1; i < age; i++) price *= 0.92; }
-  const expKm    = age * 20000;
-  const excessKm = Math.max(0, km - expKm);
-  const kmFactor = Math.max(0.5, 1 - excessKm * 0.004 / 10000);
-  const fuelMult = FUEL_FACTORS[fuel] || 1;
-  const condMult = CONDITION_FACTORS[condition] || 0.85;
-  price = Math.round(price * kmFactor * fuelMult * condMult / 100) * 100;
-  let conf = 80;
-  if (BASE_PRICES[make]) conf += 8;
-  if (age <= 5) conf += 5;
-  if (km < 100000) conf += 3;
-  return { price, confidence: Math.min(96, conf), kmFactor, fuelMult, condMult, age };
-}
-
-function displayResult(result, params) {
-  document.getElementById('valLoading').classList.add('hidden');
-  document.getElementById('valResult').classList.remove('hidden');
-  document.getElementById('resultVehicleName').textContent = `${params.make} ${params.model} (${params.year})`;
-  document.getElementById('resultPrice').textContent = result.price.toLocaleString('el-GR') + ' €';
-  const low  = Math.round(result.price * 0.92 / 100) * 100;
-  const high = Math.round(result.price * 1.08 / 100) * 100;
-  document.getElementById('resultRange').textContent = `Εύρος: ${low.toLocaleString('el-GR')} € – ${high.toLocaleString('el-GR')} €`;
-  document.getElementById('confidenceVal').textContent = result.confidence + '%';
-  setTimeout(() => { document.getElementById('confidenceBar').style.width = result.confidence + '%'; }, 100);
-  const kmImpact = Math.round((1 - result.kmFactor) * 100);
-  document.getElementById('resultFactors').innerHTML = `
-    <div class="factor-item"><p class="factor-label">Ηλικία</p><p class="factor-value ${result.age > 8 ? 'negative' : ''}">${result.age} έτη</p></div>
-    <div class="factor-item"><p class="factor-label">Επίδραση Km</p><p class="factor-value ${kmImpact > 10 ? 'negative' : ''}">${kmImpact > 0 ? '-' + kmImpact + '%' : 'Κανονική'}</p></div>
-    <div class="factor-item"><p class="factor-label">Καύσιμο</p><p class="factor-value ${result.fuelMult > 1 ? 'positive' : ''}">${FUEL_GR[params.fuel]}</p></div>
-    <div class="factor-item"><p class="factor-label">Κατάσταση</p><p class="factor-value ${result.condMult < 0.8 ? 'negative' : 'positive'}">${CONDITION_GR[params.condition]}</p></div>
-  `;
-}
-
-/* ════════════════════════════════════════════════════════════
-   CONTACT FORM — Formspree
-   ════════════════════════════════════════════════════════════ */
-function initContact() {
-  const form = document.getElementById('contactForm');
-  form.addEventListener('submit', async e => {
-    e.preventDefault();
-    const name  = document.getElementById('cName').value.trim();
-    const email = document.getElementById('cEmail').value.trim();
-    const msg   = document.getElementById('cMsg').value.trim();
-    if (!name || !email || !msg) return;
-
-    const btn = form.querySelector('[type=submit]');
-    btn.textContent = 'Αποστολή...';
-    btn.disabled = true;
-
-    try {
-      // If Formspree ID set, use it — otherwise simulate
-      if (FORMSPREE_ID) {
-        const res = await fetch(`https://formspree.io/f/${FORMSPREE_ID}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-          body: JSON.stringify({
-            name:    document.getElementById('cName').value,
-            email:   document.getElementById('cEmail').value,
-            phone:   document.getElementById('cPhone').value,
-            message: document.getElementById('cMsg').value,
-          })
-        });
-        if (!res.ok) throw new Error('Form error');
-      }
-      form.reset();
-      document.getElementById('formSuccess').classList.remove('hidden');
-    } catch (err) {
-      alert('❌ Σφάλμα αποστολής. Επικοινωνήστε στο ' + FORMSPREE_EMAIL);
-    } finally {
-      btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Αποστολή Μηνύματος`;
-      btn.disabled = false;
-    }
-  });
-}
-
-/* ════════════════════════════════════════════════════════════
-   CURSOR GLOW
-   ════════════════════════════════════════════════════════════ */
-function initCursorGlow() {
-  if (window.matchMedia('(pointer: coarse)').matches) return;
-  const glow = document.createElement('div');
-  glow.style.cssText = 'position:fixed;pointer-events:none;z-index:9999;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(177,18,26,0.04) 0%,transparent 70%);transform:translate(-50%,-50%);transition:left .15s ease,top .15s ease;will-change:left,top;';
-  document.body.appendChild(glow);
-  document.addEventListener('mousemove', e => {
-    glow.style.left = e.clientX + 'px';
-    glow.style.top  = e.clientY + 'px';
-  }, { passive: true });
-}
-
-console.log('%cSTAMCAR', 'color:#B1121A;font-family:Orbitron,sans-serif;font-size:20px;font-weight:900;letter-spacing:4px;');
+  <div class="modal-overlay hidden" id="carModal">
+    <div class="modal-box">
+      <button class="modal-close" id="modalClose">✕</button>
