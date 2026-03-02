@@ -14,7 +14,7 @@ const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tq
 const FORMSPREE_EMAIL = 'Stamcarinfo@gmail.com';
 // Για να δουλεύει το form: πήγαινε στο formspree.io, δημιούργησε δωρεάν λογαριασμό
 // και αντικατάστησε το παρακάτω με το form ID σου (π.χ. "xpwzgkqb")
-const FORMSPREE_ID = ''; // ← βάλε εδώ το ID σου από formspree.io
+const FORMSPREE_ID = 'mzdaqzdo';
 
 /* ── BADGE COLORS ────────────────────────────────────────── */
 // Προσθέτουμε αυτόματα χρώμα για κάθε badge που γράφεις στο Sheet
