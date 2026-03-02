@@ -1384,3 +1384,12 @@ body::before { z-index: -1; }
   transition: background 0.2s;
 }
 .dot.active { background: #fff; }
+
+/* ── SERVICE CARD clickable ─────────────────────────────── */
+.service-card[role="button"] { cursor: pointer; }
+.service-card[role="button"]:active { transform: scale(0.98); }
+.card-arrow {
+  display: inline-block;
+  text-decoration: none;
+  color: var(--red);
+}
