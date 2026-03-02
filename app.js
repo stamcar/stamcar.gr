@@ -548,26 +548,23 @@ function initContact() {
     if (!name || !email || !msg) return;
 
     const btn = form.querySelector('[type=submit]');
-    btn.textContent = 'Αποστολή...';
+    btn.innerHTML = 'Αποστολή...';
     btn.disabled = true;
 
     try {
-      // If Formspree ID set, use it — otherwise simulate
-      if (FORMSPREE_ID) {
-        const res = await fetch(`https://formspree.io/f/${FORMSPREE_ID}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-          body: JSON.stringify({
-            name:    document.getElementById('cName').value,
-            email:   document.getElementById('cEmail').value,
-            phone:   document.getElementById('cPhone').value,
-            message: document.getElementById('cMsg').value,
-          })
-        });
-        if (!res.ok) throw new Error('Form error');
+      const formData = new FormData(form);
+      const res = await fetch(`https://formspree.io/f/${FORMSPREE_ID}`, {
+        method: 'POST',
+        body: formData,
+        headers: { 'Accept': 'application/json' }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        form.reset();
+        document.getElementById('formSuccess').classList.remove('hidden');
+      } else {
+        throw new Error(data.error || 'Form error');
       }
-      form.reset();
-      document.getElementById('formSuccess').classList.remove('hidden');
     } catch (err) {
       alert('❌ Σφάλμα αποστολής. Επικοινωνήστε στο ' + FORMSPREE_EMAIL);
     } finally {
