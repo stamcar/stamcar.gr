@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>STAMCAR | Αγορά – Εύρεση – Πώληση Αυτοκινήτων</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <nav class="navbar" id="navbar">
+    <div class="nav-inner">
+      <a href="#hero" class="nav-logo">STAM<span>CAR</span></a>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="#services">Υπηρεσίες</a></li>
+        <li><a href="#search">Αναζήτηση</a></li>
+        <li><a href="#valuation">Κοστολόγηση</a></li>
+        <li><a href="#contact">Επικοινωνία</a></li>
+      </ul>
+      <a href="tel:6988091918" class="nav-cta">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/></svg>
+        6988091918
+      </a>
+      <button class="nav-hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+    </div>
+  </nav>
+
+  <section class="hero" id="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-stripe hero-stripe-top"></div>
+    <div class="hero-stripe hero-stripe-bottom"></div>
+    <div class="hero-content">
+      <p class="hero-tag">Αγορά – Εύρεση – Πώληση</p>
+      <h1 class="hero-title">STAM<span>CAR</span></h1>
+      <p class="hero-sub">Αυτοκίνητα για κάθε προϋπολογισμό</p>
+      <div class="hero-btns">
+        <a href="#search" class="btn btn-primary">Αναζήτηση Αυτοκινήτου</a>
+        <a href="#contact" class="btn btn-outline">Πούλησε το Αμάξι σου</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="services" id="services">
+    <div class="container">
+      <p class="section-tag">Τι κάνουμε</p>
+      <h2 class="section-title">Οι <span>Υπηρεσίες</span> μας</h2>
+      <div class="services-grid">
+        <div class="service-card reveal" onclick="location.href='#contact'" role="button">
+          <div class="service-num">01</div>
+          <h3>Εύρεση Αυτοκινήτου</h3>
+          <p>Κατόπιν παραγγελίας βρίσκουμε ακριβώς το αυτοκίνητο που ψάχνετε με τις προδιαγραφές και τον προϋπολογισμό σας.</p>
+          <a href="#contact" class="service-arrow">Επικοινωνία →</a>
+        </div>
+        <div class="service-card reveal" onclick="location.href='#search'" role="button">
+          <div class="service-num">02</div>
+          <h3>Αγορά Αυτοκινήτου</h3>
+          <p>Επιλεγμένα οχήματα σε άριστη κατάσταση. Πλήρης διαφάνεια ιστορικού, τεχνικός έλεγχος και εγγύηση.</p>
+          <a href="#search" class="service-arrow">Δες Αμάξια →</a>
+        </div>
+        <div class="service-card reveal" onclick="location.href='#contact'" role="button">
+          <div class="service-num">03</div>
+          <h3>Πώληση Αυτοκινήτου</h3>
+          <p>Αναλαμβάνουμε την πώληση του οχήματός σας στην καλύτερη τιμή. Γρήγορα, αξιόπιστα, χωρίς ταλαιπωρία.</p>
+          <a href="#contact" class="service-arrow">Επικοινωνία →</a>
+        </div>
+        <div class="service-card reveal" onclick="location.href='#valuation'" role="button">
+          <div class="service-num">04</div>
+          <h3>Εκτίμηση Αξίας</h3>
+          <p>AI εκτίμηση αξίας οχήματος βασισμένη σε πραγματικά δεδομένα αγοράς. Άμεσο αποτέλεσμα, μηδενικό κόστος.</p>
+          <a href="#valuation" class="service-arrow">Δοκίμασε →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="search-section" id="search">
+    <div class="container">
+      <p class="section-tag">Βρες το αυτοκίνητό σου</p>
+      <h2 class="section-title">Αναζήτηση <span>Οχήματος</span></h2>
+      <div class="filters-wrap">
+        <div class="filters-grid">
+          <div class="filter-group">
+            <label>Μάρκα</label>
+            <select id="filterMake">
+              <option value="">Όλες</option>
+              <option>Alfa Romeo</option><option>Audi</option><option>BMW</option>
+              <option>Chevrolet</option><option>Citroen</option><option>Dacia</option>
+              <option>Fiat</option><option>Ford</option><option>Honda</option>
+              <option>Hyundai</option><option>Jaguar</option><option>Jeep</option>
+              <option>Kia</option><option>Land Rover</option><option>Lexus</option>
+              <option>Mazda</option><option>Mercedes-Benz</option><option>Mini</option>
+              <option>Mitsubishi</option><option>Nissan</option><option>Opel</option>
+              <option>Peugeot</option><option>Porsche</option><option>Renault</option>
+              <option>Seat</option><option>Skoda</option><option>Subaru</option>
+              <option>Suzuki</option><option>Tesla</option><option>Toyota</option>
+              <option>Volkswagen</option><option>Volvo</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Μοντέλο</label>
+            <input type="text" id="filterModel" placeholder="π.χ. Corsa..." />
+          </div>
+          <div class="filter-group">
+            <label>Από Έτος</label>
+            <select id="filterYear">
+              <option value="">Όλα</option>
+              <option>2026</option><option>2025</option><option>2024</option><option>2023</option>
+              <option>2022</option><option>2021</option><option>2020</option><option>2019</option>
+              <option>2018</option><option>2017</option><option>2016</option><option>2015</option>
+              <option>2014</option><option>2013</option><option>2012</option><option>2011</option>
+              <option>2010</option><option>2009</option><option>2008</option><option>2007</option>
+              <option>2006</option><option>2005</option><option>2004</option><option>2003</option>
+              <option>2002</option><option>2001</option><option>2000</option><option>1999</option>
+              <option>1998</option><option>1997</option><option>1996</option><option>1995</option>
+              <option>1994</option><option>1993</option><option>1992</option><option>1991</option><option>1990</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Καύσιμο</label>
+            <select id="filterFuel">
+              <option value="">Όλα</option>
+              <option>Βενζίνη</option><option>Diesel</option><option>Αέριο-Βενζίνη</option>
+              <option>Υβριδικό</option><option>Ηλεκτρικό</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Κιβώτιο</label>
+            <select id="filterGearbox">
+              <option value="">Όλα</option>
+              <option>Χειροκίνητο</option><option>Αυτόματο</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Max Km</label>
+            <select id="filterKm">
+              <option value="">Όλα</option>
+              <option value="50000">50.000 km</option>
+              <option value="100000">100.000 km</option>
+              <option value="150000">150.000 km</option>
+              <option value="200000">200.000 km</option>
+              <option value="250000">250.000 km</option>
+              <option value="300000">300.000 km</option>
+            </select>
+          </div>
+        </div>
+        <div class="filter-actions">
+          <button class="btn btn-primary" id="applyFilters">Αναζήτηση</button>
+          <button class="btn btn-outline" id="resetFilters">Επαναφορά</button>
+        </div>
+      </div>
+      <div class="results-info hidden" id="resultsInfo">
+        <span class="results-count" id="resultsCount">0</span>
+        <span>αποτελέσματα βρέθηκαν</span>
+      </div>
+      <div id="carsLoading" class="loading-wrap">
+        <div class="loading-spinner"></div>
+        Φόρτωση αυτοκινήτων...
+      </div>
+      <div class="cars-grid hidden" id="carsGrid"></div>
+      <div class="no-results hidden" id="noResults">
+        <p>Δεν βρέθηκαν αυτοκίνητα.</p>
+        <button class="btn btn-outline" id="resetFilters2" style="margin-top:1rem">Επαναφορά Φίλτρων</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="valuation" id="valuation">
+    <div class="container">
+      <p class="section-tag">Εκτίμηση AI</p>
+      <h2 class="section-title">AI <span>Κοστολόγηση</span></h2>
+      <div class="valuation-inner">
+        <div class="val-form-box reveal">
+          <div class="val-grid">
+            <div class="val-group">
+              <label>Μάρκα *</label>
+              <select id="valMake">
+                <option value="">Επιλέξτε μάρκα</option>
+                <option>Alfa Romeo</option><option>Audi</option><option>BMW</option>
+                <option>Chevrolet</option><option>Chrysler</option><option>Citroen</option>
+                <option>Dacia</option><option>Fiat</option><option>Ford</option>
+                <option>Honda</option><option>Hyundai</option><option>Jaguar</option>
+                <option>Jeep</option><option>Kia</option><option>Land Rover</option>
+                <option>Lexus</option><option>Mazda</option><option>Mercedes-Benz</option>
+                <option>Mini</option><option>Mitsubishi</option><option>Nissan</option>
+                <option>Opel</option><option>Peugeot</option><option>Porsche</option>
+                <option>Renault</option><option>Seat</option><option>Skoda</option>
+                <option>Subaru</option><option>Suzuki</option><option>Tesla</option>
+                <option>Toyota</option><option>Volkswagen</option><option>Volvo</option>
+              </select>
+            </div>
+            <div class="val-group">
+              <label>Μοντέλο *</label>
+              <input type="text" id="valModel" placeholder="π.χ. Corsa, Golf" />
+            </div>
+            <div class="val-group">
+              <label>Χρονολογία *</label>
+              <select id="valYear"><option value="">Επιλέξτε</option></select>
+            </div>
+            <div class="val-group">
+              <label>Χιλιόμετρα *</label>
+              <input type="number" id="valKm" placeholder="π.χ. 85000" />
+            </div>
+            <div class="val-group">
+              <label>Καύσιμο *</label>
+              <select id="valFuel">
+                <option value="">Επιλέξτε</option>
+                <option value="petrol">Βενζίνη</option>
+                <option value="diesel">Diesel</option>
+                <option value="hybrid">Υβριδικό</option>
+                <option value="electric">Ηλεκτρικό</option>
+                <option value="lpg">LPG/CNG</option>
+              </select>
+            </div>
+            <div class="val-group">
+              <label>Κατάσταση *</label>
+              <select id="valCondition">
+                <option value="">Επιλέξτε</option>
+                <option value="excellent">Άριστη</option>
+                <option value="good">Καλή</option>
+                <option value="fair">Μέτρια</option>
+                <option value="poor">Κακή</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-full" id="estimateBtn" style="margin-top:1.5rem">Εκτίμηση Αξίας</button>
+        </div>
+        <div class="val-result-box reveal">
+          <div id="valLoading" class="hidden">
+            <div class="val-steps">
+              <div class="val-step" id="step1"><div class="val-step-dot"></div>Ανάλυση δεδομένων αγοράς...</div>
+              <div class="val-step" id="step2"><div class="val-step-dot"></div>Σύγκριση με παρόμοια οχήματα...</div>
+              <div class="val-step" id="step3"><div class="val-step-dot"></div>Υπολογισμός απόσβεσης...</div>
+              <div class="val-step" id="step4"><div class="val-step-dot"></div>Τελική εκτίμηση...</div>
+            </div>
+          </div>
+          <div id="valResult" class="hidden">
+            <p class="result-vehicle" id="resultVehicleName"></p>
+            <p class="result-price" id="resultPrice"></p>
+            <p class="result-range" id="resultRange"></p>
+            <div class="confidence-bar-wrap">
+              <div class="confidence-label"><span>Αξιοπιστία</span><span id="confidenceVal"></span></div>
+              <div class="confidence-track"><div class="confidence-fill" id="confidenceBar"></div></div>
+            </div>
+            <div class="result-factors" id="resultFactors"></div>
+            <a href="#contact" class="btn btn-primary btn-full" style="margin-top:1.5rem">Επικοινωνία για Αποτίμηση</a>
+          </div>
+          <div id="valPlaceholder" style="text-align:center;padding:3rem 1rem;color:var(--text-sub);">
+            <p style="font-family:var(--font-head);font-size:1rem;letter-spacing:.1em;text-transform:uppercase;">Συμπληρώστε τη φόρμα για εκτίμηση</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="contact" id="contact">
+    <div class="container">
+      <p class="section-tag">Επικοινωνία</p>
+      <h2 class="section-title">Μιλήστε <span>Μαζί μας</span></h2>
+      <div class="contact-wrapper">
+        <div class="reveal">
+          <p class="contact-brand">STAMCAR</p>
+          <p class="contact-tagline">Αγορά – Εύρεση – Πώληση Αυτοκινήτων</p>
+          <div class="contact-items">
+            <a href="tel:6988091918" class="contact-item">
+              <div class="contact-icon"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/></svg></div>
+              <div><span class="contact-label">Τηλέφωνο</span><span class="contact-value">6988091918</span></div>
+            </a>
+            <a href="mailto:Stamcarinfo&#64;gmail.com" class="contact-item">
+              <div class="contact-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+              <div><span class="contact-label">Email</span><span class="contact-value">Stamcarinfo&#64;gmail.com</span></div>
+            </a>
+          </div>
+        </div>
+        <div class="contact-form-wrap reveal">
+          <form class="contact-form" id="contactForm" action="https://formspree.io/f/mzdaqzdo" method="POST" novalidate>
+            <div class="form-grid">
+              <div class="form-group"><label>Ονοματεπώνυμο *</label><input type="text" id="cName" name="name" placeholder="Το όνομά σας" required /></div>
+              <div class="form-group"><label>Email *</label><input type="email" id="cEmail" name="email" placeholder="email@example.com" required /></div>
+            </div>
+            <div class="form-group"><label>Τηλέφωνο</label><input type="tel" id="cPhone" name="phone" placeholder="69xxxxxxxx" /></div>
+            <div class="form-group"><label>Μήνυμα *</label><textarea id="cMsg" name="message" rows="5" placeholder="Πώς μπορούμε να σας βοηθήσουμε;" required></textarea></div>
+            <button type="submit" class="btn btn-primary btn-full">Αποστολή Μηνύματος</button>
+            <div class="form-success hidden" id="formSuccess">
+              Το μήνυμά σας εστάλη! Θα επικοινωνήσουμε σύντομα.
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div class="footer-logo">STAM<span>CAR</span></div>
+      <div class="footer-links">
+        <a href="#services">Υπηρεσίες</a>
+        <a href="#search">Αναζήτηση</a>
+        <a href="#valuation">Κοστολόγηση</a>
+        <a href="#contact">Επικοινωνία</a>
+      </div>
+      <div class="footer-copy">© 2025 STAMCAR. Όλα τα δικαιώματα διατηρούνται.</div>
+    </div>
+  </footer>
+
+  <div class="modal-overlay hidden" id="carModal">
+    <div class="modal-box">
+      <button class="modal-close" id="modalClose">✕</button>
+      <div class="modal-content" id="modalContent"></div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
